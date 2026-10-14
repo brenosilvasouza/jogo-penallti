@@ -1,216 +1,328 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Disputa de Pênaltis</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Disputa de Pênaltis: Brasil vs Argentina</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      color: white;
+      background: #10251b;
+      user-select: none;
+    }
 
-<style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  text-align: center;
-  color: white;
-  background: #10251b;
-}
+    h1 { color: #ffe45c; margin-top: 15px; }
 
-h1 { color: #ffe45c; }
+    #screen-select, #game-container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 10px;
+    }
 
-#campo {
-  position: relative;
-  width: min(92%, 500px);
-  height: 300px;
-  margin: 20px auto;
-  overflow: hidden;
-  border: 4px solid white;
-  border-radius: 8px;
-  background: repeating-linear-gradient(
-    0deg, #218c45, #218c45 60px,
-    #197a39 60px, #197a39 120px
-  );
-}
+    .team-btn {
+      padding: 15px 30px;
+      font-size: 18px;
+      margin: 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+    }
 
-#gol {
-  position: absolute;
-  top: 15px;
-  left: 20%;
-  width: 60%;
-  height: 105px;
-  border: 5px solid white;
-  background:
-    repeating-linear-gradient(90deg, transparent 0 19px,
-      #ffffff55 20px 22px),
-    repeating-linear-gradient(0deg, transparent 0 19px,
-      #ffffff55 20px 22px);
-}
+    .btn-br { background: #ffe45c; color: #000; }
+    .btn-arg { background: #74acdf; color: #fff; }
 
-#goleiro {
-  position: absolute;
-  top: 70px;
-  left: 46%;
-  font-size: 45px;
-  transition: all 0.4s;
-}
+    #campo {
+      position: relative;
+      width: 100%;
+      height: 320px;
+      background: linear-gradient(to bottom, #1d7a3e 0%, #176332 100%);
+      border: 3px solid white;
+      border-radius: 10px;
+      margin: 15px auto;
+      overflow: hidden;
+      cursor: crosshair;
+    }
 
-#bola {
-  position: absolute;
-  bottom: 30px;
-  left: 47%;
-  font-size: 32px;
-  transition: all 0.5s;
-}
+    #baliza {
+      position: absolute;
+      top: 20px;
+      left: 15%;
+      width: 70%;
+      height: 120px;
+      border: 4px solid white;
+      border-bottom: none;
+      background: rgba(255, 255, 255, 0.15);
+    }
 
-#mensagem {
-  min-height: 28px;
-  font-size: 20px;
-  font-weight: bold;
-}
+    #goleiro {
+      position: absolute;
+      top: 80px;
+      left: calc(50% - 25px);
+      width: 50px;
+      height: 25px;
+      font-size: 24px;
+      transition: all 0.4s ease;
+    }
 
-button {
-  margin: 5px;
-  padding: 12px 16px;
-  border: none;
-  border-radius: 8px;
-  background: #ffe45c;
-  color: #172016;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-}
+    #bola {
+      position: absolute;
+      bottom: 20px;
+      left: calc(50% - 12px);
+      width: 24px;
+      height: 24px;
+      font-size: 20px;
+      transition: all 0.5s ease;
+    }
 
-button:disabled {
-  opacity: 0.45;
-}
+    /* Barra de Força */
+    #power-box {
+      width: 80%;
+      height: 20px;
+      background: #333;
+      border: 2px solid #fff;
+      margin: 10px auto;
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
 
-#placar {
-  font-size: 20px;
-  line-height: 1.8;
-}
+    #power-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(to right, green, yellow, red);
+    }
 
-</style>
+    .btn-action {
+      background: #ffe45c;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+  </style>
 </head>
-
 <body>
 
-<h1>⚽ DISPUTA DE PÊNALTIS</h1>
-<p>Escolha o canto e tente marcar o gol!</p>
+  <h1>⚽ DISPUTA DE PÊNALTIS</h1>
 
-<div id="placar">
-  Você: <span id="meusGols">0</span> |
-  Goleiro: <span id="defesas">0</span>
-  <br>
-  Cobrança: <span id="rodada">1</span>/5
-</div>
+  <!-- TELA DE SELEÇÃO DE TIME -->
+  <div id="screen-select">
+    <h2>Escolha a sua Seleção:</h2>
+    <button class="team-btn btn-br" onclick="selectTeam('Brasil')">🇧🇷 BRASIL</button>
+    <button class="team-btn btn-arg" onclick="selectTeam('Argentina')">🇦🇷 ARGENTINA</button>
+  </div>
 
-<div id="campo">
-  <div id="gol"></div>
-  <div id="goleiro">🧤</div>
-  <div id="bola">⚽</div>
-</div>
+  <!-- TELA DO JOGO -->
+  <div id="game-container" style="display: none;">
+    <h3 id="info-placar">Você: 0 | Adversário: 0</h3>
+    <h4 id="info-turno">Sua vez de BATER!</h4>
 
-<div id="mensagem">Prepare-se para cobrar!</div>
+    <div id="campo" onclick="handleClickCampo(event)">
+      <div id="baliza"></div>
+      <div id="goleiro">🧤</div>
+      <div id="bola">⚽</div>
+    </div>
 
-<div id="controles">
-  <button onclick="chutar('esquerda')">⬅ Esquerda</button>
-  <button onclick="chutar('centro')">⬆ Centro</button>
-  <button onclick="chutar('direita')">Direita ➡</button>
-</div>
+    <!-- Barra de Medição de Força -->
+    <p id="label-forca">Aguarde a mira...</p>
+    <div id="power-box">
+      <div id="power-bar"></div>
+    </div>
 
-<button onclick="reiniciar()">🔄 Jogar novamente</button>
+    <button id="btn-restart" class="btn-action" style="display:none;" onclick="restartGame()">Jogar Novamente</button>
+  </div>
 
-<script>
-let gols = 0;
-let defesas = 0;
-let rodada = 1;
-let jogando = false;
-let finalizado = false;
+  <script>
+    let playerTeam = '';
+    let cpuTeam = '';
+    let playerScore = 0;
+    let cpuScore = 0;
+    let round = 1;
+    let maxRounds = 5;
+    let mode = 'SHOOT'; // 'SHOOT' ou 'DEFEND'
+    
+    let power = 0;
+    let powerIncreasing = true;
+    let powerInterval = null;
+    let targetX = 0, targetY = 0;
+    let canAction = false;
 
-function chutar(canto) {
-  if (jogando || finalizado) return;
+    function selectTeam(team) {
+      playerTeam = team;
+      cpuTeam = team === 'Brasil' ? 'Argentina' : 'Brasil';
+      document.getElementById('screen-select').style.display = 'none';
+      document.getElementById('game-container').style.display = 'block';
+      startTurn();
+    }
 
-  jogando = true;
+    function updateUI() {
+      document.getElementById('info-placar').innerText = `${playerTeam}: ${playerScore} | ${cpuTeam}: ${cpuScore} (Rodada ${round}/${maxRounds})`;
+    }
 
-  const goleiro = document.getElementById("goleiro");
-  const bola = document.getElementById("bola");
-  const mensagem = document.getElementById("mensagem");
+    function startTurn() {
+      updateUI();
+      resetPositions();
 
-  const lados = ["esquerda", "centro", "direita"];
-  const defesa = lados[Math.floor(Math.random() * 3)];
-
-  const posicoes = {
-    esquerda: { bola: "25%", goleiro: "22%" },
-    centro:   { bola: "47%", goleiro: "46%" },
-    direita:  { bola: "70%", goleiro: "70%" }
-  };
-
-  bola.style.left = posicoes[canto].bola;
-  bola.style.bottom = "175px";
-  goleiro.style.left = posicoes[defesa].goleiro;
-
-  if (canto === defesa) {
-    defesas++;
-    mensagem.textContent = "🧤 DEFENDEU! O goleiro pegou!";
-  } else {
-    gols++;
-    mensagem.textContent = "⚽ GOOOOOL! Você marcou!";
-  }
-
-  document.getElementById("meusGols").textContent = gols;
-  document.getElementById("defesas").textContent = defesas;
-
-  document.querySelectorAll("#controles button")
-    .forEach(botao => botao.disabled = true);
-
-  setTimeout(() => {
-    rodada++;
-    document.getElementById("rodada").textContent =
-      Math.min(rodada, 5);
-
-    if (rodada > 5) {
-      finalizado = true;
-
-      if (gols > 5 - defesas) {
-        mensagem.textContent = "🏆 Você venceu a disputa!";
-      } else if (gols === 5 - defesas) {
-        mensagem.textContent = "🤝 Empate! Fim da disputa!";
-      } else {
-        mensagem.textContent = "😢 Você perdeu! Tente novamente!";
+      if (round > maxRounds) {
+        endGame();
+        return;
       }
 
-      document.getElementById("controles").style.display = "none";
-    } else {
-      bola.style.left = "47%";
-      bola.style.bottom = "30px";
-      goleiro.style.left = "46%";
-      mensagem.textContent = "Próxima cobrança! Escolha o canto.";
-      document.querySelectorAll("#controles button")
-        .forEach(botao => botao.disabled = false);
-      jogando = false;
+      if (mode === 'SHOOT') {
+        document.getElementById('info-turno').innerText = `Sua vez de BATER com o ${playerTeam}! Clique na baliza.`;
+        document.getElementById('label-forca').innerText = '1. Clique na baliza para apontar. 2. Clique de novo para fixar a força!';
+        canAction = true;
+      } else {
+        document.getElementById('info-turno').innerText = `Sua vez de DEFENDER com o ${playerTeam}! Clique onde acha que a bola vai.`;
+        document.getElementById('label-forca').innerText = 'Clique na baliza para posicionar as luvas do goleiro!';
+        canAction = true;
+      }
     }
-  }, 1000);
-}
 
-function reiniciar() {
-  gols = 0;
-  defesas = 0;
-  rodada = 1;
-  jogando = false;
-  finalizado = false;
+    function resetPositions() {
+      const bola = document.getElementById('bola');
+      const goleiro = document.getElementById('goleiro');
+      
+      bola.style.transition = 'all 0.5s ease';
+      bola.style.bottom = '20px';
+      bola.style.left = 'calc(50% - 12px)';
 
-  document.getElementById("meusGols").textContent = 0;
-  document.getElementById("defesas").textContent = 0;
-  document.getElementById("rodada").textContent = 1;
-  document.getElementById("mensagem").textContent =
-    "Prepare-se para cobrar!";
+      goleiro.style.left = 'calc(50% - 25px)';
+      goleiro.style.top = '80px';
 
-  document.getElementById("bola").style.cssText = "";
-  document.getElementById("goleiro").style.cssText = "";
-  document.getElementById("controles").style.display = "block";
+      clearInterval(powerInterval);
+      power = 0;
+      document.getElementById('power-bar').style.width = '0%';
+    }
 
-  document.querySelectorAll("#controles button")
-    .forEach(botao => botao.disabled = false);
-}
-</script>
+    function startPowerMeter() {
+      powerInterval = setInterval(() => {
+        if (powerIncreasing) {
+          power += 4;
+          if (power >= 100) powerIncreasing = false;
+        } else {
+          power -= 4;
+          if (power <= 0) powerIncreasing = true;
+        }
+        document.getElementById('power-bar').style.width = power + '%';
+      }, 30);
+    }
 
+    function handleClickCampo(event) {
+      if (!canAction) return;
+
+      const campo = document.getElementById('campo');
+      const rect = campo.getBoundingClientRect();
+      const clickX = event.clientX - rect.left;
+      const clickY = event.clientY - rect.top;
+
+      if (mode === 'SHOOT') {
+        if (!powerInterval) {
+          // Passo 1: Guardar mira e iniciar medidor de força
+          targetX = clickX;
+          targetY = clickY;
+          startPowerMeter();
+          document.getElementById('label-forca').innerText = 'Clique novamente para CHUTAR!';
+        } else {
+          // Passo 2: Confirmar força e realizar chute
+          clearInterval(powerInterval);
+          canAction = false;
+          executePlayerShot();
+        }
+      } else if (mode === 'DEFEND') {
+        // Modo Defesa
+        canAction = false;
+        executePlayerDefense(clickX, clickY);
+      }
+    }
+
+    function executePlayerShot() {
+      const bola = document.getElementById('bola');
+      const goleiro = document.getElementById('goleiro');
+
+      // Animação da bola
+      bola.style.left = (targetX - 12) + 'px';
+      bola.style.top = targetY + 'px';
+
+      // Movimento do Goleiro CPU (Escolha aleatória)
+      const options = [20, 50, 80]; // Porcentagens na baliza
+      const cpuMovePercent = options[Math.floor(Math.random() * options.length)];
+      goleiro.style.left = `calc(${cpuMovePercent}% - 25px)`;
+
+      setTimeout(() => {
+        // Verificar se foi Gol ou Defesa
+        const isGoal = Math.abs(power - 70) < 30 && Math.abs((targetX / 600 * 100) - cpuMovePercent) > 15;
+        
+        if (isGoal) {
+          playerScore++;
+          alert('GOL DA SUA SELEÇÃO! ⚽');
+        } else {
+          alert('DEFENDEU O GOLEIRO / CHUTE PARA FORA! ❌');
+        }
+
+        mode = 'DEFEND';
+        startTurn();
+      }, 600);
+    }
+
+    function executePlayerDefense(defX, defY) {
+      const goleiro = document.getElementById('goleiro');
+      const bola = document.getElementById('bola');
+
+      // Mover goleiro para o clique do jogador
+      goleiro.style.left = (defX - 25) + 'px';
+      goleiro.style.top = (defY - 12) + 'px';
+
+      // Chute da CPU aleatório
+      const cpuTargetX = Math.random() * 300 + 150; // Área da baliza
+      const cpuTargetY = Math.random() * 80 + 30;
+
+      bola.style.left = cpuTargetX + 'px';
+      bola.style.top = cpuTargetY + 'px';
+
+      setTimeout(() => {
+        const distance = Math.hypot(defX - cpuTargetX, defY - cpuTargetY);
+        
+        if (distance < 50) {
+          alert('DEFESAÇO! Você salvou o gol! 🧤');
+        } else {
+          cpuScore++;
+          alert('GOL DA CPU! ⚽');
+        }
+
+        mode = 'SHOOT';
+        round++;
+        startTurn();
+      }, 600);
+    }
+
+    function endGame() {
+      let finalMsg = playerScore > cpuScore 
+        ? `PARABÉNS! A seleção de ${playerTeam} VENCEU! 🏆` 
+        : playerScore < cpuScore 
+        ? `FIM DE JOGO! A seleção de ${cpuTeam} VENCEU! 😢` 
+        : 'FIM DE JOGO! Empate!';
+
+      document.getElementById('info-turno').innerText = finalMsg;
+      document.getElementById('btn-restart').style.display = 'inline-block';
+    }
+
+    function restartGame() {
+      playerScore = 0;
+      cpuScore = 0;
+      round = 1;
+      mode = 'SHOOT';
+      document.getElementById('btn-restart').style.display = 'none';
+      document.getElementById('screen-select').style.display = 'block';
+      document.getElementById('game-container').style.display = 'none';
+    }
+  </script>
 </body>
 </html>
