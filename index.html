@@ -3,699 +3,214 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pixel Fighter Ultimate</title>
+<title>Disputa de Pênaltis</title>
+
 <style>
-*{box-sizing:border-box}
-body{
- margin:0;background:#090b18;color:white;
- font-family:Arial,sans-serif;text-align:center;
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  color: white;
+  background: #10251b;
 }
-h1{
- color:#ffd65b;letter-spacing:5px;
- text-shadow:3px 3px #b53648;margin:15px 0 5px;
+
+h1 { color: #ffe45c; }
+
+#campo {
+  position: relative;
+  width: min(92%, 500px);
+  height: 300px;
+  margin: 20px auto;
+  overflow: hidden;
+  border: 4px solid white;
+  border-radius: 8px;
+  background: repeating-linear-gradient(
+    0deg, #218c45, #218c45 60px,
+    #197a39 60px, #197a39 120px
+  );
 }
-.subtitle{color:#b5bedc;margin-bottom:14px}
-.game{width:min(100%,1100px);margin:auto;padding:0 8px}
-.hud{
- display:flex;justify-content:space-between;gap:15px;
- padding:10px;background:#17182d;border:2px solid #444568;
+
+#gol {
+  position: absolute;
+  top: 15px;
+  left: 20%;
+  width: 60%;
+  height: 105px;
+  border: 5px solid white;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 19px,
+      #ffffff55 20px 22px),
+    repeating-linear-gradient(0deg, transparent 0 19px,
+      #ffffff55 20px 22px);
 }
-.player{width:42%;text-align:left}
-.player.right{text-align:right}
-.name{font-weight:900;letter-spacing:2px;margin-bottom:6px}
-.health{height:25px;background:#292b40;border:2px solid #ddd}
-.health div{height:100%;transition:width .15s}
-.energy{height:9px;background:#292b40;margin-top:5px}
-.energy div{height:100%;background:#43dcff}
-canvas{
- display:block;width:100%;height:auto;
- border:3px solid #4b426a;background:#24203d;
- image-rendering:pixelated;
+
+#goleiro {
+  position: absolute;
+  top: 70px;
+  left: 46%;
+  font-size: 45px;
+  transition: all 0.4s;
 }
-#message{
- min-height:40px;padding:10px;color:#ffdc67;
- font-size:20px;font-weight:bold;
+
+#bola {
+  position: absolute;
+  bottom: 30px;
+  left: 47%;
+  font-size: 32px;
+  transition: all 0.5s;
 }
-button,select{
- background:#ffd65b;color:#171529;border:0;
- padding:11px 15px;margin:4px;border-radius:5px;
- font-weight:bold;cursor:pointer;
+
+#mensagem {
+  min-height: 28px;
+  font-size: 20px;
+  font-weight: bold;
 }
-button:hover{background:#fff}
-.panel{
- background:#151629;border:1px solid #393b5b;
- padding:12px;margin-top:10px;
+
+button {
+  margin: 5px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #ffe45c;
+  color: #172016;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
 }
-.controls{line-height:1.9;color:#d5d8ec;font-size:14px}
-.mobile{
- display:flex;flex-wrap:wrap;justify-content:center;
- gap:5px;padding:10px;
+
+button:disabled {
+  opacity: 0.45;
 }
-.mobile button{min-width:65px;touch-action:none}
+
+#placar {
+  font-size: 20px;
+  line-height: 1.8;
+}
+
 </style>
 </head>
+
 <body>
 
-<h1>PIXEL FIGHTER ULTIMATE</h1>
-<div class="subtitle">ARCADE CHAMPIONSHIP • 16-BIT BATTLE</div>
+<h1>⚽ DISPUTA DE PÊNALTIS</h1>
+<p>Escolha o canto e tente marcar o gol!</p>
 
-<div class="game">
- <div class="hud">
-  <div class="player">
-   <div class="name" id="name1">SHADOW</div>
-   <div class="health"><div id="hp1" style="background:#19bfff;width:100%"></div></div>
-   <div class="energy"><div id="en1" style="width:100%"></div></div>
-  </div>
-  <div class="player right">
-   <div class="name" id="name2">TITAN</div>
-   <div class="health"><div id="hp2" style="background:#ff477d;width:100%"></div></div>
-   <div class="energy"><div id="en2" style="width:100%"></div></div>
-  </div>
- </div>
-
- <canvas id="screen" width="1000" height="600"></canvas>
-
- <div id="message">ESCOLHA SEU LUTADOR!</div>
-
- <div class="panel">
-  <b>PERSONAGEM:</b>
-  <select id="character">
-   <option value="0">Shadow — Guerreiro Azul</option>
-   <option value="1">Titan — Guerreiro Vermelho</option>
-   <option value="2">Blaze — Guerreiro do Fogo</option>
-  </select>
-  <button onclick="newGame()">INICIAR COMBATE</button>
-  <button onclick="pauseGame()">PAUSAR / CONTINUAR</button>
-  <button onclick="nextStage()">MUDAR CENÁRIO</button>
- </div>
-
- <div class="panel controls">
-  <b>JOGADOR 1</b><br>
-  A/D: mover | W: pular | S: defender | F: soco | G: chute | H: especial<br>
-  <b>JOGADOR 2</b><br>
-  Setas: mover e pular (↑) | ↓: defender | K: soco | L: chute | J: especial<br>
-  <b>Objetivo:</b> esvazie a barra de vida do oponente. O golpe especial consome energia.
- </div>
-
- <div class="mobile">
-  <button data-key="a">◀</button>
-  <button data-key="d">▶</button>
-  <button data-key="w">PULAR</button>
-  <button data-key="s">DEFESA</button>
-  <button data-key="f">SOCO</button>
-  <button data-key="g">CHUTE</button>
-  <button data-key="h">ESPECIAL</button>
- </div>
+<div id="placar">
+  Você: <span id="meusGols">0</span> |
+  Goleiro: <span id="defesas">0</span>
+  <br>
+  Cobrança: <span id="rodada">1</span>/5
 </div>
 
+<div id="campo">
+  <div id="gol"></div>
+  <div id="goleiro">🧤</div>
+  <div id="bola">⚽</div>
+</div>
+
+<div id="mensagem">Prepare-se para cobrar!</div>
+
+<div id="controles">
+  <button onclick="chutar('esquerda')">⬅ Esquerda</button>
+  <button onclick="chutar('centro')">⬆ Centro</button>
+  <button onclick="chutar('direita')">Direita ➡</button>
+</div>
+
+<button onclick="reiniciar()">🔄 Jogar novamente</button>
+
 <script>
-"use strict";
-
-const canvas=document.getElementById("screen");
-const ctx=canvas.getContext("2d");
-const W=1000,H=600,FLOOR=472;
-const keys={};
-
-const characters=[
- {name:"SHADOW",color:"#0877d8",accent:"#38dcff",skin:"#e6b18b",
-  hair:"#171b2b",speed:4.5,power:1},
- {name:"TITAN",color:"#8c203f",accent:"#ff477d",skin:"#bd8569",
-  hair:"#22202c",speed:3.8,power:1.2},
- {name:"BLAZE",color:"#e65b1a",accent:"#ffdb54",skin:"#f0b88b",
-  hair:"#70252c",speed:4.1,power:1.1}
-];
-
-let fighters=[],particles=[],floatingTexts=[],sparks=[];
-let state="ready",frame=0,seconds=99,elapsed=0;
-let stage=0,round=1,shake=0,flash=0;
-let winner="",roundWait=0;
-
-function makeFighter(x,characterIndex,controls,ai=false){
- const c=characters[characterIndex];
- return {
-  x,y:FLOOR-124,w:64,h:124,
-  vx:0,vy:0,ground:true,
-  characterIndex,name:c.name,color:c.color,
-  accent:c.accent,skin:c.skin,hair:c.hair,
-  speed:c.speed,power:c.power,
-  controls,ai,hp:100,energy:100,
-  face:ai?-1:1,
-  action:"idle",timer:0,cool:0,stun:0,
-  block:false,hit:false,combo:0,comboTime:0,
-  aiDelay:0,walkCycle:0
- };
-}
-
-function newGame(){
- const chosen=Number(document.getElementById("character").value);
- fighters=[
-  makeFighter(220,chosen,
-   {left:"a",right:"d",jump:"w",block:"s",
-    punch:"f",kick:"g",special:"h"}),
-  makeFighter(720,chosen===1?0:1,
-   {left:"ArrowLeft",right:"ArrowRight",jump:"ArrowUp",
-    block:"ArrowDown",punch:"k",kick:"l",special:"j"},true)
- ];
- particles=[];floatingTexts=[];sparks=[];
- seconds=99;elapsed=0;round=1;shake=0;flash=0;
- winner="";roundWait=0;state="playing";
- document.getElementById("message").textContent="ROUND 1 — FIGHT!";
- updateHUD();
-}
-
-function pauseGame(){
- if(state==="playing"){
-  state="paused";
-  document.getElementById("message").textContent="JOGO PAUSADO";
- }else if(state==="paused"){
-  state="playing";
-  document.getElementById("message").textContent="LUTE!";
- }
-}
-
-function nextStage(){
- stage=(stage+1)%3;
- document.getElementById("message").textContent=
-  ["CENÁRIO: CIDADE AO PÔR DO SOL",
-   "CENÁRIO: TEMPLO NOTURNO",
-   "CENÁRIO: ARENA DE FOGO"][stage];
-}
-
-window.addEventListener("keydown",e=>{
- const k=e.key;
- if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"," "].includes(k))
-  e.preventDefault();
- keys[k]=true;keys[k.toLowerCase()]=true;
-});
-window.addEventListener("keyup",e=>{
- keys[e.key]=false;keys[e.key.toLowerCase()]=false;
-});
-
-document.querySelectorAll("[data-key]").forEach(b=>{
- const k=b.dataset.key;
- const down=e=>{e.preventDefault();keys[k]=true};
- const up=e=>{e.preventDefault();keys[k]=false};
- b.addEventListener("pointerdown",down);
- b.addEventListener("pointerup",up);
- b.addEventListener("pointerleave",up);
- b.addEventListener("pointercancel",up);
-});
-
-function rect(x,y,w,h,color){
- ctx.fillStyle=color;
- ctx.fillRect(Math.round(x),Math.round(y),w,h);
-}
-
-function particle(x,y,color,count=12,power=5){
- for(let i=0;i<count;i++){
-  const a=Math.random()*Math.PI*2;
-  const s=Math.random()*power+1;
-  particles.push({
-   x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,
-   life:18+Math.random()*25,size:2+Math.random()*6,color
-  });
- }
-}
-
-function textEffect(x,y,text,color="#ffffff"){
- floatingTexts.push({x,y,text,color,life:45});
-}
-
-function updateHUD(){
- if(!fighters.length)return;
- const [p1,p2]=fighters;
- document.getElementById("hp1").style.width=p1.hp+"%";
- document.getElementById("hp2").style.width=p2.hp+"%";
- document.getElementById("en1").style.width=p1.energy+"%";
- document.getElementById("en2").style.width=p2.energy+"%";
- document.getElementById("name1").textContent=p1.name;
- document.getElementById("name2").textContent=p2.name;
-}
-
-// --------------------------------------------------
-// CENÁRIOS
-// --------------------------------------------------
-
-function drawSky(){
- let g=ctx.createLinearGradient(0,0,0,420);
- if(stage===0){
-  g.addColorStop(0,"#482477");
-  g.addColorStop(.42,"#ed526b");
-  g.addColorStop(.75,"#ff9d4b");
-  g.addColorStop(1,"#ffe0a0");
- }else if(stage===1){
-  g.addColorStop(0,"#080d32");
-  g.addColorStop(.55,"#313e77");
-  g.addColorStop(1,"#b36e99");
- }else{
-  g.addColorStop(0,"#310b32");
-  g.addColorStop(.5,"#b52d35");
-  g.addColorStop(1,"#ff9c38");
- }
- ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-}
-
-function drawSun(){
- ctx.fillStyle=stage===1?"#d9e9ff":"#ffe7a4";
- ctx.beginPath();ctx.arc(820,230,58,0,Math.PI*2);ctx.fill();
- for(let i=0;i<5;i++){
-  rect(765,210+i*15,110,3,stage===1?"#c6d9ff":"#ffbc79");
- }
-}
-
-function drawMountains(){
- ctx.fillStyle=stage===1?"#161b42":"#352449";
- for(let i=0;i<9;i++){
-  ctx.beginPath();
-  ctx.moveTo(i*125-40,370);
-  ctx.lineTo(i*125+35,190+(i%3)*30);
-  ctx.lineTo(i*125+130,370);
-  ctx.fill();
- }
-}
-
-function drawCity(){
- for(let i=0;i<19;i++){
-  const x=i*57;
-  const height=70+(i*31%110);
-  rect(x,370-height,43,height,
-   i%2?"#2b2849":"#34324f");
-  for(let yy=380-height;yy<365;yy+=23){
-   for(let xx=x+8;xx<x+38;xx+=15){
-    rect(xx,yy,5,8,(i+yy)%3?"#ffd47c":"#91b9dc");
-   }
-  }
- }
-}
-
-function drawLake(){
- rect(0,365,W,92,stage===1?"#273c71":"#487992");
- rect(0,368,W,3,"#ffd4a1");
- for(let i=0;i<45;i++){
-  const x=(i*43+frame*.25)%W;
-  const y=379+(i%6)*12;
-  rect(x,y,18+(i%4)*10,2,
-   i%2?"#f9ad9a":"#a2d4df");
- }
-}
-
-function drawArena(){
- rect(0,FLOOR,W,H-FLOOR,"#d1c3b5");
- for(let y=FLOOR+7;y<H;y+=35){
-  rect(0,y,W,2,"#93867f");
-  for(let x=(y%2)*35;x<W;x+=90)
-   rect(x,y,2,35,"#a69a91");
- }
- rect(0,FLOOR,W,5,"#ffe0a1");
- rect(0,FLOOR+5,W,3,"#4b3a52");
-}
-
-function drawPalm(x,y){
- rect(x,y,7,95,"#503548");
- for(let i=0;i<7;i++){
-  let dx=(i-3)*13;
-  ctx.strokeStyle="#28583f";ctx.lineWidth=6;
-  ctx.beginPath();ctx.moveTo(x+3,y+4);
-  ctx.lineTo(x+dx,y-20+(i%2)*8);ctx.stroke();
-  rect(x+dx-5,y-23+(i%2)*8,12,6,"#317b4b");
- }
-}
-
-function drawCrowd(){
- for(let i=0;i<18;i++){
-  let x=i*58+12;
-  rect(x,340,14,22,
-   ["#252a42","#1256a1","#d5a06d","#f4d8bd"][i%4]);
-  rect(x+2,328,10,12,"#d9a17e");
-  rect(x,361,5,18,"#302b3d");
-  rect(x+9,361,5,18,"#302b3d");
- }
-}
-
-function drawStage(){
- drawSky();drawSun();drawMountains();
- if(stage===0)drawCity();
- else if(stage===1){
-  rect(140,270,720,100,"#292445");
-  for(let i=0;i<9;i++){
-   rect(170+i*80,250,8,120,"#5e4d78");
-   rect(160+i*80,247,27,7,"#e0c9a0");
-  }
-  rect(120,360,760,8,"#e4c29b");
- }else{
-  for(let i=0;i<12;i++){
-   rect(i*90,310+(i%3)*18,55,70,"#602747");
-   rect(i*90+15,290+(i%3)*18,25,25,"#ff713b");
-  }
- }
- if(stage!==1){
-  drawPalm(40,300);drawPalm(900,300);
- }
- drawLake();drawCrowd();drawArena();
-}
-
-// --------------------------------------------------
-// PERSONAGENS PIXEL ART
-// --------------------------------------------------
-
-function drawPixelFighter(p){
- const x=Math.round(p.x),y=Math.round(p.y);
- const step=p.ground&&Math.abs(p.vx)>1?
-  Math.sin(frame*.35)*8:0;
-
- // Sombra
- rect(x-7,FLOOR-2,79,5,"#8c827e");
-
- // Pernas
- rect(x+13,y+72,16,28,"#20253a");
- rect(x+36,y+72,16,28,"#20253a");
- rect(x+13+step,y+92,13,13,"#20253a");
- rect(x+36-step,y+92,13,13,"#20253a");
-
- // Botas
- rect(x+8+step,y+103,23,10,"#101625");
- rect(x+34-step,y+103,24,10,p.accent);
-
- // Corpo e roupa
- rect(x+12,y+36,42,43,p.color);
- rect(x+7,y+43,52,28,p.color);
- rect(x+12,y+66,42,7,p.accent);
- rect(x+23,y+38,8,26,p.accent);
- rect(x+36,y+39,5,24,"#e3e6ed");
-
- // Cinto
- rect(x+20,y+67,29,5,"#f8d45e");
- rect(x+30,y+67,7,6,"#fff2b3");
-
- // Braço traseiro
- rect(x+3,y+43,14,25,p.skin);
- rect(x+1,y+59,17,13,p.accent);
-
- // Braço dianteiro
- if(p.action==="punch"||p.action==="special"){
-  rect(x+43,y+39,25,13,p.skin);
-  rect(x+61,y+34,17,18,p.accent);
- }else{
-  rect(x+44,y+43,13,23,p.skin);
-  rect(x+42,y+58,18,14,p.accent);
- }
-
- // Cabeça
- rect(x+16,y+8,32,29,p.skin);
- rect(x+12,y+8,39,11,p.hair);
- rect(x+16,y+1,30,9,p.hair);
- rect(x+15,y+12,35,5,p.accent);
- rect(x+38,y+18,5,5,"#151624");
-
- // Efeito de energia
- if(p.action==="special"){
-  ctx.globalAlpha=.22;
-  rect(x-15,y-14,105,140,p.accent);
-  ctx.globalAlpha=1;
-  for(let i=0;i<12;i++){
-   let px=x+(i*17+frame*3)%95-12;
-   let py=y+(i*31+frame*2)%115;
-   rect(px,py,6,8,"#fff3ac");
-  }
- }
-
- // Escudo
- if(p.block){
-  rect(x+48,y+23,18,48,"#6deaff");
-  rect(x+53,y+29,8,34,"#e3fbff");
- }
-
- // Chute
- if(p.action==="kick"){
-  const kx=p.face===1?x+49:x-27;
-  rect(kx,y+64,42,15,p.color);
-  rect(kx+(p.face===1?30:0),y+62,15,18,p.accent);
- }
-
- ctx.fillStyle="#fff";
- ctx.font="bold 13px monospace";
- ctx.textAlign="center";
- ctx.fillText(p.name,x+31,y-12);
-}
-
-// --------------------------------------------------
-// COMBATE E INTELIGÊNCIA ARTIFICIAL
-// --------------------------------------------------
-
-function attack(p,type){
- if(state!=="playing"||p.cool>0||p.stun>0||p.block)return;
- if(type==="special"){
-  if(p.energy<35){
-   if(!p.ai)document.getElementById("message").textContent=
-    "ENERGIA INSUFICIENTE!";
-   return;
-  }
-  p.energy-=35;
- }
- p.action=type;
- p.timer=type==="punch"?20:type==="kick"?28:42;
- p.cool=type==="punch"?22:type==="kick"?32:48;
- p.hit=false;
- if(type==="special"){
-  particle(p.x+32,p.y+55,p.accent,25,7);
-  textEffect(p.x+32,p.y-35,"ESPECIAL!",p.accent);
- }
-}
-
-function readPlayer(p){
- p.block=!!keys[p.controls.block];
- if(p.stun>0)return;
- if(p.block){p.vx*=.65;return}
-
- if(keys[p.controls.left])p.vx=-p.speed;
- else if(keys[p.controls.right])p.vx=p.speed;
- else p.vx*=.75;
-
- if(keys[p.controls.jump]&&p.ground){
-  p.vy=-14;p.ground=false;
-  particle(p.x+30,FLOOR,"#fff0c2",6,2);
- }
- if(keys[p.controls.punch])attack(p,"punch");
- if(keys[p.controls.kick])attack(p,"kick");
- if(keys[p.controls.special])attack(p,"special");
-}
-
-function readAI(p,o){
- const d=o.x-p.x;
- const dist=Math.abs(d);
- p.block=false;
- if(p.stun>0)return;
-
- if(dist>145){
-  p.vx=Math.sign(d)*p.speed*.65;
-  if(p.ground&&Math.random()<.003)p.vy=-12;
- }else{
-  p.vx*=.6;
-  if(o.action==="special"&&dist<180&&Math.random()<.5){
-   p.block=true;return;
-  }
-  if(p.cool===0){
-   const r=Math.random();
-   if(r<.38)attack(p,"punch");
-   else if(r<.68)attack(p,"kick");
-   else if(p.energy>=35)attack(p,"special");
-  }
- }
-}
-
-function updateFighter(p,o){
- p.face=o.x>p.x?1:-1;
- if(p.cool>0)p.cool--;
- if(p.stun>0)p.stun--;
- if(p.timer>0)p.timer--;
- else if(["punch","kick","special","hit"].includes(p.action))
-  p.action="idle";
-
- if(p.comboTime>0)p.comboTime--;
- else p.combo=0;
-
- if(p.ai)readAI(p,o);else readPlayer(p);
-
- p.x+=p.vx;p.y+=p.vy;
- if(!p.ground)p.vy+=.65;
- if(p.y+p.h>=FLOOR){
-  p.y=FLOOR-p.h;p.vy=0;p.ground=true;
- }else p.ground=false;
-
- p.x=Math.max(15,Math.min(W-p.w-15,p.x));
- p.walkCycle+=Math.abs(p.vx);
-}
-
-function combat(p,o){
- if(!["punch","kick","special"].includes(p.action)||p.hit)return;
-
- let active=p.action==="punch"?p.timer<15&&p.timer>7:
- p.action==="kick"?p.timer<21&&p.timer>9:
- p.timer<30&&p.timer>16;
- if(!active)return;
-
- const dist=Math.abs((p.x+32)-(o.x+32));
- const reach=p.action==="punch"?88:p.action==="kick"?118:190;
- if(dist>reach||Math.abs(p.y-o.y)>80)return;
- if((o.x-p.x)*p.face<0)return;
-
- p.hit=true;
- let damage=(p.action==="punch"?7:p.action==="kick"?12:23)*p.power;
- if(o.block)damage=Math.max(1,Math.round(damage*.18));
- damage=Math.round(damage);
-
- o.hp=Math.max(0,o.hp-damage);
- p.energy=Math.min(100,p.energy+(p.action==="special"?4:11));
-
- if(!o.block){
-  o.stun=p.action==="special"?25:13;
-  o.vx=p.face*(p.action==="special"?12:7);
-  o.vy=p.action==="special"?-9:-4;
-  o.action="hit";o.timer=12;
-  shake=p.action==="special"?13:6;
-  particle(o.x+32,o.y+50,
-   p.action==="special"?"#ffdc57":"#ffffff",
-   p.action==="special"?35:16,
-   p.action==="special"?10:5);
-  textEffect(o.x+32,o.y-22,"-"+damage,
-   p.action==="special"?"#ffdc57":"#ffffff");
-  p.combo++;p.comboTime=100;
-  if(p.combo>=2)
-   textEffect(p.x+32,p.y-45,p.combo+" HITS!","#ffdc57");
- }else{
-  particle(o.x+32,o.y+45,"#75eaff",7,3);
-  textEffect(o.x+32,o.y-20,"DEFESA!","#75eaff");
- }
- updateHUD();
-}
-
-// --------------------------------------------------
-// INTERFACE ARCADE
-// --------------------------------------------------
-
-function drawHUD(){
- rect(0,0,W,76,"#15172df0");
- ctx.textAlign="left";
- ctx.font="bold 17px monospace";
- ctx.fillStyle="#ffe16b";
- ctx.fillText("P1",22,23);
- ctx.fillStyle="#8de0ff";
- ctx.fillText(fighters[0].name,22,49);
- ctx.textAlign="right";
- ctx.fillStyle="#ffe16b";
- ctx.fillText("P2",978,23);
- ctx.fillStyle="#ff91c8";
- ctx.fillText(fighters[1].name,978,49);
- ctx.textAlign="center";
- ctx.fillStyle="#d3e0ff";
- ctx.fillText("HI 00000000",500,23);
-
- // Vida
- rect(190,14,620,21,"#33364d");
- rect(190,14,620*fighters[0].hp/100,21,"#ef3039");
- rect(190,14,620,3,"#ffaaa1");
- rect(190,39,620,18,"#33364d");
- rect(190,39,620*fighters[1].hp/100,18,"#ef3039");
- rect(190,39,620,3,"#ffaaa1");
-
- // Energia
- rect(190,61,620,5,"#303249");
- rect(190,61,620*fighters[0].energy/100,5,"#42dcff");
- rect(190,68,620*fighters[1].energy/100,5,"#bd63ff");
-
- ctx.fillStyle="#fff0b5";
- ctx.font="bold 42px monospace";
- ctx.fillText(String(seconds).padStart(2,"0"),500,133);
- ctx.font="bold 16px monospace";
- ctx.fillText("ROUND "+round,500,155);
-}
-
-// --------------------------------------------------
-// EFEITOS E LOOP PRINCIPAL
-// --------------------------------------------------
-
-function drawEffects(){
- for(const p of particles){
-  p.x+=p.vx;p.y+=p.vy;p.vy+=.22;p.life--;
-  ctx.globalAlpha=Math.max(0,p.life/35);
-  rect(p.x,p.y,p.size,p.size,p.color);
- }
- ctx.globalAlpha=1;
- particles=particles.filter(p=>p.life>0);
-
- for(const t of floatingTexts){
-  t.y-=.8;t.life--;
-  ctx.globalAlpha=Math.min(1,t.life/12);
-  ctx.textAlign="center";
-  ctx.font="bold 22px monospace";
-  ctx.fillStyle=t.color;
-  ctx.fillText(t.text,t.x,t.y);
- }
- ctx.globalAlpha=1;
- floatingTexts=floatingTexts.filter(t=>t.life>0);
-}
-
-function drawOverlay(title,subtitle){
- rect(150,215,700,135,"#101226ed");
- ctx.textAlign="center";
- ctx.font="bold 45px monospace";
- ctx.fillStyle="#ffdc67";
- ctx.fillText(title,500,270);
- ctx.font="bold 19px monospace";
- ctx.fillStyle="#ffffff";
- ctx.fillText(subtitle,500,315);
-}
-
-function loop(now){
- requestAnimationFrame(loop);
- if(!fighters.length)return;
- frame++;
-
- drawStage();
-
- if(state==="playing"){
-  elapsed+=(now-(loop.last||now))/1000;
-  if(elapsed>=1){
-   seconds--;elapsed=0;
+let gols = 0;
+let defesas = 0;
+let rodada = 1;
+let jogando = false;
+let finalizado = false;
+
+function chutar(canto) {
+  if (jogando || finalizado) return;
+
+  jogando = true;
+
+  const goleiro = document.getElementById("goleiro");
+  const bola = document.getElementById("bola");
+  const mensagem = document.getElementById("mensagem");
+
+  const lados = ["esquerda", "centro", "direita"];
+  const defesa = lados[Math.floor(Math.random() * 3)];
+
+  const posicoes = {
+    esquerda: { bola: "25%", goleiro: "22%" },
+    centro:   { bola: "47%", goleiro: "46%" },
+    direita:  { bola: "70%", goleiro: "70%" }
+  };
+
+  bola.style.left = posicoes[canto].bola;
+  bola.style.bottom = "175px";
+  goleiro.style.left = posicoes[defesa].goleiro;
+
+  if (canto === defesa) {
+    defesas++;
+    mensagem.textContent = "🧤 DEFENDEU! O goleiro pegou!";
+  } else {
+    gols++;
+    mensagem.textContent = "⚽ GOOOOOL! Você marcou!";
   }
 
-  updateFighter(fighters[0],fighters[1]);
-  updateFighter(fighters[1],fighters[0]);
-  combat(fighters[0],fighters[1]);
-  combat(fighters[1],fighters[0]);
+  document.getElementById("meusGols").textContent = gols;
+  document.getElementById("defesas").textContent = defesas;
 
-  if(fighters[0].hp<=0||fighters[1].hp<=0||seconds<=0){
-   state="over";
-   winner=fighters[0].hp===fighters[1].hp?"EMPATE!":
-    fighters[0].hp>fighters[1].hp?
-     fighters[0].name+" VENCEU!":
-     fighters[1].name+" VENCEU!";
-   document.getElementById("message").textContent=winner;
-  }
- }
- loop.last=now;
+  document.querySelectorAll("#controles button")
+    .forEach(botao => botao.disabled = true);
 
- ctx.save();
- if(shake>0){
-  ctx.translate((Math.random()-.5)*shake,
-   (Math.random()-.5)*shake);
-  shake*=.8;if(shake<.5)shake=0;
- }
- fighters.forEach(drawPixelFighter);
- drawEffects();
- drawHUD();
- ctx.restore();
+  setTimeout(() => {
+    rodada++;
+    document.getElementById("rodada").textContent =
+      Math.min(rodada, 5);
 
- if(state==="ready")
-  drawOverlay("PIXEL FIGHTER","CLIQUE EM INICIAR COMBATE");
- if(state==="paused)
-  drawOverlay("PAUSADO","CLIQUE EM PAUSAR / CONTINUAR");
- if(state==="over")
-  drawOverlay(winner,"CLIQUE EM INICIAR COMBATE PARA JOGAR");
+    if (rodada > 5) {
+      finalizado = true;
+
+      if (gols > 5 - defesas) {
+        mensagem.textContent = "🏆 Você venceu a disputa!";
+      } else if (gols === 5 - defesas) {
+        mensagem.textContent = "🤝 Empate! Fim da disputa!";
+      } else {
+        mensagem.textContent = "😢 Você perdeu! Tente novamente!";
+      }
+
+      document.getElementById("controles").style.display = "none";
+    } else {
+      bola.style.left = "47%";
+      bola.style.bottom = "30px";
+      goleiro.style.left = "46%";
+      mensagem.textContent = "Próxima cobrança! Escolha o canto.";
+      document.querySelectorAll("#controles button")
+        .forEach(botao => botao.disabled = false);
+      jogando = false;
+    }
+  }, 1000);
 }
-newGame();
-state="ready";
-requestAnimationFrame(loop);
+
+function reiniciar() {
+  gols = 0;
+  defesas = 0;
+  rodada = 1;
+  jogando = false;
+  finalizado = false;
+
+  document.getElementById("meusGols").textContent = 0;
+  document.getElementById("defesas").textContent = 0;
+  document.getElementById("rodada").textContent = 1;
+  document.getElementById("mensagem").textContent =
+    "Prepare-se para cobrar!";
+
+  document.getElementById("bola").style.cssText = "";
+  document.getElementById("goleiro").style.cssText = "";
+  document.getElementById("controles").style.display = "block";
+
+  document.querySelectorAll("#controles button")
+    .forEach(botao => botao.disabled = false);
+}
 </script>
+
 </body>
 </html>
