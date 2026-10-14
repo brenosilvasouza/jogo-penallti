@@ -3,108 +3,218 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Disputa de Pênaltis: Brasil vs Argentina</title>
+  <title>Disputa de Pênaltis</title>
   <style>
+    * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       text-align: center;
       color: white;
-      background: #10251b;
+      background: #0f172a;
       user-select: none;
     }
 
-    h1 { color: #ffe45c; margin-top: 15px; }
+    h1 { margin: 15px 0 5px; color: #fbbf24; text-shadow: 2px 2px 4px #000; }
 
     #screen-select, #game-container {
-      max-width: 600px;
+      max-width: 650px;
       margin: 0 auto;
       padding: 10px;
     }
 
     .team-btn {
-      padding: 15px 30px;
+      padding: 12px 25px;
       font-size: 18px;
       margin: 10px;
       cursor: pointer;
       border: none;
       border-radius: 8px;
       font-weight: bold;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
+    .btn-br { background: #facc15; color: #1e3a8a; }
+    .btn-arg { background: #38bdf8; color: #ffffff; }
 
-    .btn-br { background: #ffe45c; color: #000; }
-    .btn-arg { background: #74acdf; color: #fff; }
-
-    #campo {
+    /* Estádio e Campo estilo Cartoon */
+    #estadio {
       position: relative;
       width: 100%;
-      height: 320px;
-      background: linear-gradient(to bottom, #1d7a3e 0%, #176332 100%);
-      border: 3px solid white;
-      border-radius: 10px;
-      margin: 15px auto;
+      height: 400px;
+      background: linear-gradient(to bottom, #334155 0%, #1e293b 35%, #4ac05d 35%, #2ea043 100%);
+      border: 4px solid #ffffff;
+      border-radius: 12px;
       overflow: hidden;
       cursor: crosshair;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
     }
 
-    #baliza {
+    /* Arquibancada no fundo */
+    .crowd {
       position: absolute;
-      top: 20px;
+      top: 0;
+      width: 100%;
+      height: 35%;
+      background: radial-gradient(circle, #475569 20%, transparent 20%), #1e293b;
+      background-size: 10px 10px;
+      opacity: 0.8;
+    }
+
+    .placa-publicidade {
+      position: absolute;
+      top: 32%;
+      width: 100%;
+      height: 12px;
+      background: #94a3b8;
+      border-top: 2px solid #64748b;
+    }
+
+    /* Baliza em 3D */
+    #gol-area {
+      position: absolute;
+      top: 15%;
       left: 15%;
       width: 70%;
       height: 120px;
-      border: 4px solid white;
+      border: 6px solid #ffffff;
       border-bottom: none;
-      background: rgba(255, 255, 255, 0.15);
+      background-image: 
+        linear-gradient(to right, rgba(255,255,255,0.3) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.3) 1px, transparent 1px);
+      background-size: 12px 12px;
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
     }
 
+    /* Linhas do Campo */
+    .linha-grande-area {
+      position: absolute;
+      top: 45%;
+      left: 5%;
+      width: 90%;
+      height: 2px;
+      background: rgba(255,255,255,0.8);
+    }
+
+    .linha-penalti {
+      position: absolute;
+      bottom: 25%;
+      left: 10%;
+      width: 80%;
+      height: 2px;
+      background: rgba(255,255,255,0.8);
+    }
+
+    /* Ponto de Mira (Red Target) */
+    #target {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background: #ef4444;
+      border: 2px solid #ffffff;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      display: none;
+      z-index: 10;
+    }
+
+    /* Personagens */
     #goleiro {
       position: absolute;
-      top: 80px;
-      left: calc(50% - 25px);
-      width: 50px;
-      height: 25px;
-      font-size: 24px;
+      top: 28%;
+      left: 50%;
+      width: 40px;
+      height: 60px;
+      transform: translateX(-50%);
       transition: all 0.4s ease;
+      z-index: 5;
     }
 
+    /* Ilustração de Goleiro em CSS */
+    .goleiro-body {
+      width: 100%;
+      height: 100%;
+      background: #3b82f6;
+      border-radius: 8px 8px 0 0;
+      position: relative;
+    }
+    .goleiro-head {
+      position: absolute;
+      top: -15px;
+      left: 10px;
+      width: 20px;
+      height: 20px;
+      background: #fca5a5;
+      border-radius: 50%;
+    }
+
+    #batedor {
+      position: absolute;
+      bottom: 5%;
+      left: 50%;
+      width: 44px;
+      height: 70px;
+      transform: translateX(-50%);
+      z-index: 5;
+    }
+
+    .batedor-body {
+      width: 100%;
+      height: 100%;
+      background: #ef4444;
+      border-radius: 10px 10px 0 0;
+      position: relative;
+    }
+    .batedor-head {
+      position: absolute;
+      top: -16px;
+      left: 12px;
+      width: 20px;
+      height: 20px;
+      background: #fde047;
+      border-radius: 50%;
+    }
+
+    /* Bola */
     #bola {
       position: absolute;
-      bottom: 20px;
-      left: calc(50% - 12px);
-      width: 24px;
-      height: 24px;
-      font-size: 20px;
-      transition: all 0.5s ease;
+      bottom: 22%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      background: #ffffff;
+      border: 2px solid #000000;
+      border-radius: 50%;
+      transform: translateX(-50%);
+      transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+      z-index: 6;
     }
 
-    /* Barra de Força */
+    /* Barra de Medição de Força */
     #power-box {
       width: 80%;
-      height: 20px;
-      background: #333;
-      border: 2px solid #fff;
+      height: 18px;
+      background: #1e293b;
+      border: 2px solid #ffffff;
       margin: 10px auto;
       border-radius: 10px;
       overflow: hidden;
-      position: relative;
     }
 
     #power-bar {
       height: 100%;
       width: 0%;
-      background: linear-gradient(to right, green, yellow, red);
+      background: linear-gradient(to right, #22c55e, #eab308, #ef4444);
     }
 
     .btn-action {
-      background: #ffe45c;
+      background: #facc15;
+      color: #0f172a;
       border: none;
-      padding: 10px 20px;
+      padding: 10px 24px;
       font-size: 16px;
       font-weight: bold;
-      border-radius: 5px;
+      border-radius: 6px;
       cursor: pointer;
-      margin-top: 10px;
     }
   </style>
 </head>
@@ -112,26 +222,43 @@
 
   <h1>⚽ DISPUTA DE PÊNALTIS</h1>
 
-  <!-- TELA DE SELEÇÃO DE TIME -->
   <div id="screen-select">
     <h2>Escolha a sua Seleção:</h2>
     <button class="team-btn btn-br" onclick="selectTeam('Brasil')">🇧🇷 BRASIL</button>
     <button class="team-btn btn-arg" onclick="selectTeam('Argentina')">🇦🇷 ARGENTINA</button>
   </div>
 
-  <!-- TELA DO JOGO -->
   <div id="game-container" style="display: none;">
-    <h3 id="info-placar">Você: 0 | Adversário: 0</h3>
+    <h3 id="info-placar">Você: 0 | CPU: 0</h3>
     <h4 id="info-turno">Sua vez de BATER!</h4>
 
-    <div id="campo" onclick="handleClickCampo(event)">
-      <div id="baliza"></div>
-      <div id="goleiro">🧤</div>
-      <div id="bola">⚽</div>
+    <div id="estadio" onclick="handleClickCampo(event)">
+      <div class="crowd"></div>
+      <div class="placa-publicidade"></div>
+      <div id="gol-area"></div>
+      <div class="linha-grande-area"></div>
+      <div class="linha-penalti"></div>
+
+      <!-- Alvo/Mira -->
+      <div id="target"></div>
+
+      <!-- Goleiro -->
+      <div id="goleiro">
+        <div class="goleiro-head"></div>
+        <div class="goleiro-body" id="goleiro-camisa"></div>
+      </div>
+
+      <!-- Bola -->
+      <div id="bola"></div>
+
+      <!-- Batedor -->
+      <div id="batedor">
+        <div class="batedor-head"></div>
+        <div class="batedor-body" id="batedor-camisa"></div>
+      </div>
     </div>
 
-    <!-- Barra de Medição de Força -->
-    <p id="label-forca">Aguarde a mira...</p>
+    <p id="label-forca">1. Clique na baliza para mirar.</p>
     <div id="power-box">
       <div id="power-bar"></div>
     </div>
@@ -146,8 +273,8 @@
     let cpuScore = 0;
     let round = 1;
     let maxRounds = 5;
-    let mode = 'SHOOT'; // 'SHOOT' ou 'DEFEND'
-    
+    let mode = 'SHOOT';
+
     let power = 0;
     let powerIncreasing = true;
     let powerInterval = null;
@@ -157,8 +284,14 @@
     function selectTeam(team) {
       playerTeam = team;
       cpuTeam = team === 'Brasil' ? 'Argentina' : 'Brasil';
+      
       document.getElementById('screen-select').style.display = 'none';
       document.getElementById('game-container').style.display = 'block';
+
+      // Cores das camisas
+      document.getElementById('batedor-camisa').style.background = team === 'Brasil' ? '#facc15' : '#38bdf8';
+      document.getElementById('goleiro-camisa').style.background = team === 'Brasil' ? '#38bdf8' : '#facc15';
+
       startTurn();
     }
 
@@ -176,12 +309,14 @@
       }
 
       if (mode === 'SHOOT') {
-        document.getElementById('info-turno').innerText = `Sua vez de BATER com o ${playerTeam}! Clique na baliza.`;
-        document.getElementById('label-forca').innerText = '1. Clique na baliza para apontar. 2. Clique de novo para fixar a força!';
+        document.getElementById('info-turno').innerText = `Sua vez de BATER (${playerTeam})!`;
+        document.getElementById('label-forca').innerText = '1. Clique na baliza para fixar a mira.';
+        document.getElementById('batedor').style.display = 'block';
         canAction = true;
       } else {
-        document.getElementById('info-turno').innerText = `Sua vez de DEFENDER com o ${playerTeam}! Clique onde acha que a bola vai.`;
-        document.getElementById('label-forca').innerText = 'Clique na baliza para posicionar as luvas do goleiro!';
+        document.getElementById('info-turno').innerText = `Sua vez de DEFENDER (${playerTeam})!`;
+        document.getElementById('label-forca').innerText = 'Clique no local da baliza onde deseja saltar!';
+        document.getElementById('batedor').style.display = 'none';
         canAction = true;
       }
     }
@@ -189,15 +324,20 @@
     function resetPositions() {
       const bola = document.getElementById('bola');
       const goleiro = document.getElementById('goleiro');
-      
-      bola.style.transition = 'all 0.5s ease';
-      bola.style.bottom = '20px';
-      bola.style.left = 'calc(50% - 12px)';
+      const target = document.getElementById('target');
 
-      goleiro.style.left = 'calc(50% - 25px)';
-      goleiro.style.top = '80px';
+      bola.style.transition = 'all 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
+      bola.style.bottom = '22%';
+      bola.style.left = '50%';
+      bola.style.transform = 'translateX(-50%) scale(1)';
+
+      goleiro.style.left = '50%';
+      goleiro.style.top = '28%';
+
+      target.style.display = 'none';
 
       clearInterval(powerInterval);
+      powerInterval = null;
       power = 0;
       document.getElementById('power-bar').style.width = '0%';
     }
@@ -205,39 +345,44 @@
     function startPowerMeter() {
       powerInterval = setInterval(() => {
         if (powerIncreasing) {
-          power += 4;
+          power += 5;
           if (power >= 100) powerIncreasing = false;
         } else {
-          power -= 4;
+          power -= 5;
           if (power <= 0) powerIncreasing = true;
         }
         document.getElementById('power-bar').style.width = power + '%';
-      }, 30);
+      }, 25);
     }
 
     function handleClickCampo(event) {
       if (!canAction) return;
 
-      const campo = document.getElementById('campo');
-      const rect = campo.getBoundingClientRect();
+      const estadio = document.getElementById('estadio');
+      const rect = estadio.getBoundingClientRect();
       const clickX = event.clientX - rect.left;
       const clickY = event.clientY - rect.top;
 
       if (mode === 'SHOOT') {
         if (!powerInterval) {
-          // Passo 1: Guardar mira e iniciar medidor de força
+          // Fixar a mira (Red Target)
           targetX = clickX;
           targetY = clickY;
+
+          const target = document.getElementById('target');
+          target.style.left = targetX + 'px';
+          target.style.top = targetY + 'px';
+          target.style.display = 'block';
+
           startPowerMeter();
-          document.getElementById('label-forca').innerText = 'Clique novamente para CHUTAR!';
+          document.getElementById('label-forca').innerText = '2. Clique novamente para definir a força e chutar!';
         } else {
-          // Passo 2: Confirmar força e realizar chute
+          // Confirmar Força e Chutar
           clearInterval(powerInterval);
           canAction = false;
           executePlayerShot();
         }
       } else if (mode === 'DEFEND') {
-        // Modo Defesa
         canAction = false;
         executePlayerDefense(clickX, clickY);
       }
@@ -247,24 +392,23 @@
       const bola = document.getElementById('bola');
       const goleiro = document.getElementById('goleiro');
 
-      // Animação da bola
-      bola.style.left = (targetX - 12) + 'px';
+      // Movimento da Bola
+      bola.style.left = targetX + 'px';
       bola.style.top = targetY + 'px';
+      bola.style.transform = 'scale(0.6)';
 
-      // Movimento do Goleiro CPU (Escolha aleatória)
-      const options = [20, 50, 80]; // Porcentagens na baliza
-      const cpuMovePercent = options[Math.floor(Math.random() * options.length)];
-      goleiro.style.left = `calc(${cpuMovePercent}% - 25px)`;
+      // Movimento aleatório do goleiro
+      const cpuMoveX = Math.random() * 200 + 200; // Área do gol
+      goleiro.style.left = cpuMoveX + 'px';
 
       setTimeout(() => {
-        // Verificar se foi Gol ou Defesa
-        const isGoal = Math.abs(power - 70) < 30 && Math.abs((targetX / 600 * 100) - cpuMovePercent) > 15;
-        
+        const isGoal = Math.abs(power - 70) < 35 && Math.abs(targetX - cpuMoveX) > 40;
+
         if (isGoal) {
           playerScore++;
-          alert('GOL DA SUA SELEÇÃO! ⚽');
+          alert('GOLAZO! ⚽');
         } else {
-          alert('DEFENDEU O GOLEIRO / CHUTE PARA FORA! ❌');
+          alert('DEFENDEU O GOLEIRO / PARA FORA! ❌');
         }
 
         mode = 'DEFEND';
@@ -276,22 +420,23 @@
       const goleiro = document.getElementById('goleiro');
       const bola = document.getElementById('bola');
 
-      // Mover goleiro para o clique do jogador
-      goleiro.style.left = (defX - 25) + 'px';
-      goleiro.style.top = (defY - 12) + 'px';
+      // Mover o goleiro para a posição escolhida pelo jogador
+      goleiro.style.left = defX + 'px';
+      goleiro.style.top = defY + 'px';
 
-      // Chute da CPU aleatório
-      const cpuTargetX = Math.random() * 300 + 150; // Área da baliza
-      const cpuTargetY = Math.random() * 80 + 30;
+      // Chute da CPU
+      const cpuTargetX = Math.random() * 220 + 210;
+      const cpuTargetY = Math.random() * 70 + 80;
 
       bola.style.left = cpuTargetX + 'px';
       bola.style.top = cpuTargetY + 'px';
+      bola.style.transform = 'scale(0.6)';
 
       setTimeout(() => {
         const distance = Math.hypot(defX - cpuTargetX, defY - cpuTargetY);
-        
+
         if (distance < 50) {
-          alert('DEFESAÇO! Você salvou o gol! 🧤');
+          alert('DEFESAÇO! Salvou o gol! 🧤');
         } else {
           cpuScore++;
           alert('GOL DA CPU! ⚽');
@@ -304,13 +449,13 @@
     }
 
     function endGame() {
-      let finalMsg = playerScore > cpuScore 
-        ? `PARABÉNS! A seleção de ${playerTeam} VENCEU! 🏆` 
+      let msg = playerScore > cpuScore 
+        ? `PARABÉNS! ${playerTeam} Venceu a partida! 🏆` 
         : playerScore < cpuScore 
-        ? `FIM DE JOGO! A seleção de ${cpuTeam} VENCEU! 😢` 
+        ? `FIM DE JOGO! ${cpuTeam} Venceu! 😢` 
         : 'FIM DE JOGO! Empate!';
 
-      document.getElementById('info-turno').innerText = finalMsg;
+      document.getElementById('info-turno').innerText = msg;
       document.getElementById('btn-restart').style.display = 'inline-block';
     }
 
@@ -323,6 +468,3 @@
       document.getElementById('screen-select').style.display = 'block';
       document.getElementById('game-container').style.display = 'none';
     }
-  </script>
-</body>
-</html>
