@@ -1,470 +1,290 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Disputa de Pênaltis</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      text-align: center;
-      color: white;
-      background: #0f172a;
-      user-select: none;
-    }
-
-    h1 { margin: 15px 0 5px; color: #fbbf24; text-shadow: 2px 2px 4px #000; }
-
-    #screen-select, #game-container {
-      max-width: 650px;
-      margin: 0 auto;
-      padding: 10px;
-    }
-
-    .team-btn {
-      padding: 12px 25px;
-      font-size: 18px;
-      margin: 10px;
-      cursor: pointer;
-      border: none;
-      border-radius: 8px;
-      font-weight: bold;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-    }
-    .btn-br { background: #facc15; color: #1e3a8a; }
-    .btn-arg { background: #38bdf8; color: #ffffff; }
-
-    /* Estádio e Campo estilo Cartoon */
-    #estadio {
-      position: relative;
-      width: 100%;
-      height: 400px;
-      background: linear-gradient(to bottom, #334155 0%, #1e293b 35%, #4ac05d 35%, #2ea043 100%);
-      border: 4px solid #ffffff;
-      border-radius: 12px;
-      overflow: hidden;
-      cursor: crosshair;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-    }
-
-    /* Arquibancada no fundo */
-    .crowd {
-      position: absolute;
-      top: 0;
-      width: 100%;
-      height: 35%;
-      background: radial-gradient(circle, #475569 20%, transparent 20%), #1e293b;
-      background-size: 10px 10px;
-      opacity: 0.8;
-    }
-
-    .placa-publicidade {
-      position: absolute;
-      top: 32%;
-      width: 100%;
-      height: 12px;
-      background: #94a3b8;
-      border-top: 2px solid #64748b;
-    }
-
-    /* Baliza em 3D */
-    #gol-area {
-      position: absolute;
-      top: 15%;
-      left: 15%;
-      width: 70%;
-      height: 120px;
-      border: 6px solid #ffffff;
-      border-bottom: none;
-      background-image: 
-        linear-gradient(to right, rgba(255,255,255,0.3) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255,255,255,0.3) 1px, transparent 1px);
-      background-size: 12px 12px;
-      box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
-    }
-
-    /* Linhas do Campo */
-    .linha-grande-area {
-      position: absolute;
-      top: 45%;
-      left: 5%;
-      width: 90%;
-      height: 2px;
-      background: rgba(255,255,255,0.8);
-    }
-
-    .linha-penalti {
-      position: absolute;
-      bottom: 25%;
-      left: 10%;
-      width: 80%;
-      height: 2px;
-      background: rgba(255,255,255,0.8);
-    }
-
-    /* Ponto de Mira (Red Target) */
-    #target {
-      position: absolute;
-      width: 16px;
-      height: 16px;
-      background: #ef4444;
-      border: 2px solid #ffffff;
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-      display: none;
-      z-index: 10;
-    }
-
-    /* Personagens */
-    #goleiro {
-      position: absolute;
-      top: 28%;
-      left: 50%;
-      width: 40px;
-      height: 60px;
-      transform: translateX(-50%);
-      transition: all 0.4s ease;
-      z-index: 5;
-    }
-
-    /* Ilustração de Goleiro em CSS */
-    .goleiro-body {
-      width: 100%;
-      height: 100%;
-      background: #3b82f6;
-      border-radius: 8px 8px 0 0;
-      position: relative;
-    }
-    .goleiro-head {
-      position: absolute;
-      top: -15px;
-      left: 10px;
-      width: 20px;
-      height: 20px;
-      background: #fca5a5;
-      border-radius: 50%;
-    }
-
-    #batedor {
-      position: absolute;
-      bottom: 5%;
-      left: 50%;
-      width: 44px;
-      height: 70px;
-      transform: translateX(-50%);
-      z-index: 5;
-    }
-
-    .batedor-body {
-      width: 100%;
-      height: 100%;
-      background: #ef4444;
-      border-radius: 10px 10px 0 0;
-      position: relative;
-    }
-    .batedor-head {
-      position: absolute;
-      top: -16px;
-      left: 12px;
-      width: 20px;
-      height: 20px;
-      background: #fde047;
-      border-radius: 50%;
-    }
-
-    /* Bola */
-    #bola {
-      position: absolute;
-      bottom: 22%;
-      left: 50%;
-      width: 20px;
-      height: 20px;
-      background: #ffffff;
-      border: 2px solid #000000;
-      border-radius: 50%;
-      transform: translateX(-50%);
-      transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
-      z-index: 6;
-    }
-
-    /* Barra de Medição de Força */
-    #power-box {
-      width: 80%;
-      height: 18px;
-      background: #1e293b;
-      border: 2px solid #ffffff;
-      margin: 10px auto;
-      border-radius: 10px;
-      overflow: hidden;
-    }
-
-    #power-bar {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(to right, #22c55e, #eab308, #ef4444);
-    }
-
-    .btn-action {
-      background: #facc15;
-      color: #0f172a;
-      border: none;
-      padding: 10px 24px;
-      font-size: 16px;
-      font-weight: bold;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Penalty Legends | Brasil x Argentina</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#071321;color:white;font-family:Arial,sans-serif;text-align:center;padding:16px}
+h1{font-size:clamp(25px,5vw,42px);font-style:italic;margin:8px}
+h1 span{color:#ffd45c}
+.menu{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin:18px}
+select,button{padding:12px;border:0;border-radius:9px;font-weight:bold;cursor:pointer}
+select{background:#182b42;color:white}
+button{background:#ffd45c;color:#142238}
+button:hover{filter:brightness(1.12)}
+.score{font-size:38px;font-weight:900;margin:10px}
+#status{color:#ffd45c;font-weight:bold;min-height:24px}
+.arena{width:min(900px,100%);margin:auto;position:relative;overflow:hidden;border:3px solid #32465d;border-radius:14px}
+canvas{width:100%;display:block;touch-action:manipulation}
+.help{color:#a9bdd2;font-size:13px;line-height:1.8;margin:15px}
+</style>
 </head>
 <body>
+<h1>⚽ PENALTY <span>LEGENDS</span></h1>
 
-  <h1>⚽ DISPUTA DE PÊNALTIS</h1>
+<div class="menu">
+<select id="teamA">
+<option value="br">🇧🇷 Brasil</option>
+<option value="ar">🇦🇷 Argentina</option>
+</select>
+<select id="teamB">
+<option value="ar">🇦🇷 Argentina</option>
+<option value="br">🇧🇷 Brasil</option>
+</select>
+<select id="mode">
+<option value="cpu">1 jogador vs computador</option>
+<option value="pvp">2 jogadores</option>
+</select>
+<button onclick="start()">▶ JOGAR</button>
+</div>
 
-  <div id="screen-select">
-    <h2>Escolha a sua Seleção:</h2>
-    <button class="team-btn btn-br" onclick="selectTeam('Brasil')">🇧🇷 BRASIL</button>
-    <button class="team-btn btn-arg" onclick="selectTeam('Argentina')">🇦🇷 ARGENTINA</button>
-  </div>
+<div class="score">
+<span id="a">0</span> <small>×</small> <span id="b">0</span>
+</div>
+<div id="status">Escolha os times e comece a partida!</div>
 
-  <div id="game-container" style="display: none;">
-    <h3 id="info-placar">Você: 0 | CPU: 0</h3>
-    <h4 id="info-turno">Sua vez de BATER!</h4>
+<div class="arena">
+<canvas id="c" width="900" height="550"></canvas>
+</div>
 
-    <div id="estadio" onclick="handleClickCampo(event)">
-      <div class="crowd"></div>
-      <div class="placa-publicidade"></div>
-      <div id="gol-area"></div>
-      <div class="linha-grande-area"></div>
-      <div class="linha-penalti"></div>
+<div class="menu">
+<button onclick="kick(-1)">↖ Canto esquerdo</button>
+<button onclick="kick(0)">↑ Centro</button>
+<button onclick="kick(1)">↗ Canto direito</button>
+<button onclick="save(-1)">🧤 Defender esquerda</button>
+<button onclick="save(1)">🧤 Defender direita</button>
+</div>
 
-      <!-- Alvo/Mira -->
-      <div id="target"></div>
+<div class="help">
+<strong>Como jogar:</strong> escolha um canto para chutar ou defender.<br>
+No modo de dois jogadores, alternem as cobranças.<br>
+Cada equipe tem cinco cobranças. Se houver empate, a disputa continua.
+</div>
 
-      <!-- Goleiro -->
-      <div id="goleiro">
-        <div class="goleiro-head"></div>
-        <div class="goleiro-body" id="goleiro-camisa"></div>
-      </div>
+<script>
+const c=document.getElementById('c'),x=c.getContext('2d');
+const W=900,H=550;
+const $=id=>document.getElementById(id);
+const teams={
+ br:{name:'BRASIL',flag:'🇧🇷',shirt:'#ffdf24',short:'#168342'},
+ ar:{name:'ARGENTINA',flag:'🇦🇷',shirt:'#83d9f5',short:'#f8f8f8'}
+};
+let score=[0,0],shots=[[],[]],shooter=0,mode='cpu';
+let running=false,phase='idle',ball={x:450,y:400,z:0};
+let keeper={x:450,y:125,dive:0,dx:0};
+let target={x:450,y:100},particles=[],anim=0,last=0;
+let teamsNow=['br','ar'],round=0,message='Escolha os times e comece!';
+let lastShot=0;
 
-      <!-- Bola -->
-      <div id="bola"></div>
+function start(){
+ teamsNow=[$('teamA').value,$('teamB').value];
+ if(teamsNow[0]===teamsNow[1]){
+  teamsNow[1]=teamsNow[0]==='br'?'ar':'br';
+  $('teamB').value=teamsNow[1];
+ }
+ mode=$('mode').value;score=[0,0];shots=[[],[]];
+ shooter=0;round=0;running=true;phase='aim';
+ ball={x:450,y:400,z:0};keeper={x:450,y:125,dive:0,dx:0};
+ particles=[];message='Sua vez! Escolha onde chutar.';
+ updateUI();
+}
 
-      <!-- Batedor -->
-      <div id="batedor">
-        <div class="batedor-head"></div>
-        <div class="batedor-body" id="batedor-camisa"></div>
-      </div>
-    </div>
+function updateUI(){
+ $('a').textContent=score[0];$('b').textContent=score[1];
+ $('status').textContent=teamsNow[shooter].toUpperCase()+' — '+message;
+}
 
-    <p id="label-forca">1. Clique na baliza para mirar.</p>
-    <div id="power-box">
-      <div id="power-bar"></div>
-    </div>
+function kick(dir){
+ if(!running||phase!=='aim')return;
+ if(mode==='cpu'&&shooter===1)return;
+ target.x=dir<0?340:dir>0?560:450;
+ target.y=dir===0?145:105;
+ shootBall();
+}
 
-    <button id="btn-restart" class="btn-action" style="display:none;" onclick="restartGame()">Jogar Novamente</button>
-  </div>
+function shootBall(){
+ phase='flight';lastShot=performance.now();
+ ball={x:450,y:400,z:0};
+ keeper.dx=(target.x-keeper.x)*.85;
+ keeper.dive=1;
+ message='CHUTE! ⚡';updateUI();
+}
 
-  <script>
-    let playerTeam = '';
-    let cpuTeam = '';
-    let playerScore = 0;
-    let cpuScore = 0;
-    let round = 1;
-    let maxRounds = 5;
-    let mode = 'SHOOT';
+function save(dir){
+ if(!running)return;
+ if(phase==='aim'&&mode==='pvp'){
+  target.x=dir<0?340:560;target.y=105;
+  phase='flight';lastShot=performance.now();
+  ball={x:450,y:400,z:0};keeper.dive=1;
+  keeper.dx=dir*120;message='CHUTE!';updateUI();
+ }
+}
 
-    let power = 0;
-    let powerIncreasing = true;
-    let powerInterval = null;
-    let targetX = 0, targetY = 0;
-    let canAction = false;
+function resolve(){
+ let d=Math.abs(target.x-keeper.x);
+ let saved=d<75&&Math.random()<.85;
+ let goal=!saved;
+ if(goal)score[shooter]++;
+ shots[shooter].push(goal);
+ message=goal?'GOOOOOOL! ⚽':'DEFESAÇA! 🧤';
+ if(goal)burst(target.x,target.y,'#ffdf60');
+ else burst(keeper.x,keeper.y,'#75dcff');
+ updateUI();
+ phase='result';lastShot=performance.now();
+}
 
-    function selectTeam(team) {
-      playerTeam = team;
-      cpuTeam = team === 'Brasil' ? 'Argentina' : 'Brasil';
-      
-      document.getElementById('screen-select').style.display = 'none';
-      document.getElementById('game-container').style.display = 'block';
+function next(){
+ round++;
+ if(shots[0].length>=5&&shots[1].length>=5&&
+    shots[0].length===shots[1].length&&score[0]!==score[1]){
+  running=false;phase='over';
+  message='🏆 VENCEDOR: '+teams[teamsNow[score[0]>score[1]?0:1]].name;
+  updateUI();return;
+ }
+ shooter=round%2===0?0:1;
+ phase='aim';keeper={x:450,y:125,dive:0,dx:0};
+ ball={x:450,y:400,z:0};
+ message=mode==='cpu'&&shooter===1?'Computador cobrando...':'Escolha o canto do chute.';
+ updateUI();
+}
 
-      // Cores das camisas
-      document.getElementById('batedor-camisa').style.background = team === 'Brasil' ? '#facc15' : '#38bdf8';
-      document.getElementById('goleiro-camisa').style.background = team === 'Brasil' ? '#38bdf8' : '#facc15';
+function burst(px,py,color){
+ for(let i=0;i<25;i++){
+  let a=Math.random()*Math.PI*2,s=60+Math.random()*170;
+  particles.push({x:px,y:py,vx:Math.cos(a)*s,vy:Math.sin(a)*s,
+  life:.5+Math.random()*.6,color});
+ }
+}
 
-      startTurn();
-    }
+function rect(a,b,w,h,color){
+ x.fillStyle=color;x.fillRect(a,b,w,h);
+}
 
-    function updateUI() {
-      document.getElementById('info-placar').innerText = `${playerTeam}: ${playerScore} | ${cpuTeam}: ${cpuScore} (Rodada ${round}/${maxRounds})`;
-    }
+function player(px,py,shirt,short,goalie=false){
+ x.save();x.translate(px,py);
+ x.fillStyle='#10261977';
+ x.beginPath();x.ellipse(0,3,24,7,0,0,7);x.fill();
+ let movement=Math.sin(anim*8)*3;
+ // legs
+ x.strokeStyle='#d5a17c';x.lineWidth=6;
+ x.beginPath();x.moveTo(-7,-20);x.lineTo(-9+movement,-5);
+ x.moveTo(7,-20);x.lineTo(9-movement,-5);x.stroke();
+ x.strokeStyle=goalie?'#202c3c':'#f4f4f4';x.lineWidth=8;
+ x.beginPath();x.moveTo(-9+movement,-5);x.lineTo(-12+movement,0);
+ x.moveTo(9-movement,-5);x.lineTo(12-movement,0);x.stroke();
+ // arms
+ x.strokeStyle='#d6a17b';x.lineWidth=7;
+ x.beginPath();x.moveTo(-11,-49);x.lineTo(-19,-31);
+ x.moveTo(11,-49);x.lineTo(19,-31);x.stroke();
+ // shirt
+ rect(-13,-54,26,27,shirt);
+ rect(-13,-29,26,12,short);
+ // gloves
+ if(goalie){x.fillStyle='#f3dc52';x.beginPath();x.arc(-19,-29,5,0,7);x.arc(19,-29,5,0,7);x.fill()}
+ // head
+ x.fillStyle='#d6a17b';x.beginPath();x.arc(0,-63,10,0,7);x.fill();
+ x.fillStyle='#30251f';x.beginPath();x.arc(0,-67,10,Math.PI,7);x.fill();
+ x.restore();
+}
 
-    function startTurn() {
-      updateUI();
-      resetPositions();
+function draw(){
+ x.clearRect(0,0,W,H);
+ // night sky and stadium
+ let sky=x.createLinearGradient(0,0,0,180);
+ sky.addColorStop(0,'#101b30');sky.addColorStop(1,'#52687b');
+ rect(0,0,W,H,sky);
+ // stadium crowd
+ for(let row=0;row<5;row++)for(let i=0;i<100;i++){
+  x.fillStyle=['#d7b86b','#e4eaf0','#3c6685','#ba5353','#27364a'][(i+row*3)%5];
+  x.globalAlpha=.75;x.beginPath();
+  x.arc(i*9,20+row*13,3,0,7);x.fill();
+ }
+ x.globalAlpha=1;
+ rect(0,83,W,30,'#667c8b');
+ // pitch
+ rect(0,113,W,437,'#3e9f40');
+ for(let i=0;i<7;i++)rect(0,113+i*63,W,31,i%2?'#49aa43':'#3e9c3e');
+ // field lines
+ x.strokeStyle='#edfff0';x.lineWidth=3;
+ x.beginPath();x.moveTo(0,188);x.lineTo(W,188);
+ x.moveTo(0,500);x.lineTo(W,500);
+ x.moveTo(150,188);x.lineTo(150,310);x.lineTo(750,310);x.lineTo(750,188);
+ x.stroke();
+ // goal net
+ rect(225,27,450,104,'#d9e4e8');
+ rect(235,36,430,94,'#243447');
+ x.strokeStyle='#b8cad3';x.lineWidth=1;
+ for(let i=0;i<=30;i++){
+  x.beginPath();x.moveTo(235+i*14.3,36);x.lineTo(235+i*14.3,130);x.stroke();
+ }
+ for(let i=0;i<8;i++){
+  x.beginPath();x.moveTo(235,36+i*13);x.lineTo(665,36+i*13);x.stroke();
+ }
+ x.strokeStyle='#fff';x.lineWidth=8;
+ x.strokeRect(235,28,430,103);
+ // keeper
+ player(keeper.x,keeper.y,'#25354a','#3b4b60',true);
+ // shooter
+ player(450,407,teams[teamsNow[shooter]].shirt,
+ teams[teamsNow[shooter]].short);
+ // ball trajectory
+ if(phase==='flight'){
+  let t=Math.min(1,(performance.now()-lastShot)/700);
+  let ease=t*t*(3-2*t);
+  ball.x=450+(target.x-450)*ease;
+  ball.y=400+(target.y-400)*ease;
+  ball.z=Math.sin(t*Math.PI)*100;
+  if(t>=1)resolve();
+ }else{
+  ball.x=450;ball.y=400;ball.z=0;
+ }
+ // ball
+ x.save();x.translate(ball.x,ball.y-ball.z);
+ x.fillStyle='#17251a66';x.beginPath();x.ellipse(0,ball.z+8,10,4,0,0,7);x.fill();
+ x.fillStyle='#fff';x.beginPath();x.arc(0,0,9,0,7);x.fill();
+ x.strokeStyle='#252d35';x.lineWidth=2;x.stroke();
+ x.fillStyle='#252d35';
+ for(let i=0;i<5;i++){
+  let a=i*Math.PI*2/5;x.beginPath();x.arc(Math.cos(a)*4,Math.sin(a)*4,2,0,7);x.fill();
+ }
+ x.restore();
+ // aim indicator
+ if(phase==='aim'&&!(mode==='cpu'&&shooter===1)){
+  x.strokeStyle='#ffdc66';x.lineWidth=3;x.beginPath();
+  x.arc(target.x,target.y,14+Math.sin(anim*5)*3,0,7);x.stroke();
+ }
+ // particles
+ for(let p of particles){
+  x.globalAlpha=Math.max(0,p.life);x.fillStyle=p.color;
+  x.beginPath();x.arc(p.x,p.y,4,0,7);x.fill();
+ }
+ x.globalAlpha=1;
+}
 
-      if (round > maxRounds) {
-        endGame();
-        return;
-      }
-
-      if (mode === 'SHOOT') {
-        document.getElementById('info-turno').innerText = `Sua vez de BATER (${playerTeam})!`;
-        document.getElementById('label-forca').innerText = '1. Clique na baliza para fixar a mira.';
-        document.getElementById('batedor').style.display = 'block';
-        canAction = true;
-      } else {
-        document.getElementById('info-turno').innerText = `Sua vez de DEFENDER (${playerTeam})!`;
-        document.getElementById('label-forca').innerText = 'Clique no local da baliza onde deseja saltar!';
-        document.getElementById('batedor').style.display = 'none';
-        canAction = true;
-      }
-    }
-
-    function resetPositions() {
-      const bola = document.getElementById('bola');
-      const goleiro = document.getElementById('goleiro');
-      const target = document.getElementById('target');
-
-      bola.style.transition = 'all 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
-      bola.style.bottom = '22%';
-      bola.style.left = '50%';
-      bola.style.transform = 'translateX(-50%) scale(1)';
-
-      goleiro.style.left = '50%';
-      goleiro.style.top = '28%';
-
-      target.style.display = 'none';
-
-      clearInterval(powerInterval);
-      powerInterval = null;
-      power = 0;
-      document.getElementById('power-bar').style.width = '0%';
-    }
-
-    function startPowerMeter() {
-      powerInterval = setInterval(() => {
-        if (powerIncreasing) {
-          power += 5;
-          if (power >= 100) powerIncreasing = false;
-        } else {
-          power -= 5;
-          if (power <= 0) powerIncreasing = true;
-        }
-        document.getElementById('power-bar').style.width = power + '%';
-      }, 25);
-    }
-
-    function handleClickCampo(event) {
-      if (!canAction) return;
-
-      const estadio = document.getElementById('estadio');
-      const rect = estadio.getBoundingClientRect();
-      const clickX = event.clientX - rect.left;
-      const clickY = event.clientY - rect.top;
-
-      if (mode === 'SHOOT') {
-        if (!powerInterval) {
-          // Fixar a mira (Red Target)
-          targetX = clickX;
-          targetY = clickY;
-
-          const target = document.getElementById('target');
-          target.style.left = targetX + 'px';
-          target.style.top = targetY + 'px';
-          target.style.display = 'block';
-
-          startPowerMeter();
-          document.getElementById('label-forca').innerText = '2. Clique novamente para definir a força e chutar!';
-        } else {
-          // Confirmar Força e Chutar
-          clearInterval(powerInterval);
-          canAction = false;
-          executePlayerShot();
-        }
-      } else if (mode === 'DEFEND') {
-        canAction = false;
-        executePlayerDefense(clickX, clickY);
-      }
-    }
-
-    function executePlayerShot() {
-      const bola = document.getElementById('bola');
-      const goleiro = document.getElementById('goleiro');
-
-      // Movimento da Bola
-      bola.style.left = targetX + 'px';
-      bola.style.top = targetY + 'px';
-      bola.style.transform = 'scale(0.6)';
-
-      // Movimento aleatório do goleiro
-      const cpuMoveX = Math.random() * 200 + 200; // Área do gol
-      goleiro.style.left = cpuMoveX + 'px';
-
-      setTimeout(() => {
-        const isGoal = Math.abs(power - 70) < 35 && Math.abs(targetX - cpuMoveX) > 40;
-
-        if (isGoal) {
-          playerScore++;
-          alert('GOLAZO! ⚽');
-        } else {
-          alert('DEFENDEU O GOLEIRO / PARA FORA! ❌');
-        }
-
-        mode = 'DEFEND';
-        startTurn();
-      }, 600);
-    }
-
-    function executePlayerDefense(defX, defY) {
-      const goleiro = document.getElementById('goleiro');
-      const bola = document.getElementById('bola');
-
-      // Mover o goleiro para a posição escolhida pelo jogador
-      goleiro.style.left = defX + 'px';
-      goleiro.style.top = defY + 'px';
-
-      // Chute da CPU
-      const cpuTargetX = Math.random() * 220 + 210;
-      const cpuTargetY = Math.random() * 70 + 80;
-
-      bola.style.left = cpuTargetX + 'px';
-      bola.style.top = cpuTargetY + 'px';
-      bola.style.transform = 'scale(0.6)';
-
-      setTimeout(() => {
-        const distance = Math.hypot(defX - cpuTargetX, defY - cpuTargetY);
-
-        if (distance < 50) {
-          alert('DEFESAÇO! Salvou o gol! 🧤');
-        } else {
-          cpuScore++;
-          alert('GOL DA CPU! ⚽');
-        }
-
-        mode = 'SHOOT';
-        round++;
-        startTurn();
-      }, 600);
-    }
-
-    function endGame() {
-      let msg = playerScore > cpuScore 
-        ? `PARABÉNS! ${playerTeam} Venceu a partida! 🏆` 
-        : playerScore < cpuScore 
-        ? `FIM DE JOGO! ${cpuTeam} Venceu! 😢` 
-        : 'FIM DE JOGO! Empate!';
-
-      document.getElementById('info-turno').innerText = msg;
-      document.getElementById('btn-restart').style.display = 'inline-block';
-    }
-
-    function restartGame() {
-      playerScore = 0;
-      cpuScore = 0;
-      round = 1;
-      mode = 'SHOOT';
-      document.getElementById('btn-restart').style.display = 'none';
-      document.getElementById('screen-select').style.display = 'block';
-      document.getElementById('game-container').style.display = 'none';
-    }
+let previous=0;
+function loop(now){
+ let dt=Math.min((now-previous)/1000,.035);previous=now;anim+=dt;
+ if(running&&!document.hidden){
+  if(phase==='flight'){
+   let t=(now-lastShot)/700;
+   keeper.x+=((target.x-keeper.x)*.06);
+   if(t>=1)resolve();
+  }
+  if(phase==='result'&&now-lastShot>1100)next();
+  if(mode==='cpu'&&shooter===1&&phase==='aim'){
+   target.x=340+Math.random()*220;target.y=85+Math.random()*90;
+   shootBall();
+  }
+ }
+ for(let p of particles){
+  p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=100*dt;p.life-=dt;
+ }
+ particles=particles.filter(p=>p.life>0);
+ draw();requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
