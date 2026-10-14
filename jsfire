@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Penalty Legends — Mouse Edition</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#07150d;color:white;font-family:Arial,sans-serif;text-align:center}
+h1{color:#dfff45;font-size:clamp(25px,5vw,44px);font-style:italic;margin:12px 0 5px}
+header p{margin:5px;color:#b7d0bd}
+.top{display:flex;align-items:center;justify-content:center;gap:20px;margin:10px}
+.team{font-size:13px;font-weight:bold}
+.score{font-size:36px;font-weight:bold;color:#e5ff61}
+#round{color:#c8ddce;font-size:14px}
+.arena{position:relative;width:min(96vw,1000px);margin:12px auto 0;border:3px solid #d6e9d7;border-radius:12px;overflow:hidden;background:#23843b}
+canvas{display:block;width:100%;height:auto;cursor:crosshair;touch-action:none}
+#message{min-height:25px;margin:8px;color:#e5ff61;font-weight:bold}
+#chargeWrap{width:min(350px,80vw);height:10px;background:#284633;margin:8px auto;border-radius:10px;overflow:hidden}
+#charge{height:100%;width:0;background:#dfff45}
+#start{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#03130ddf;z-index:2}
+.panel{background:#102c1b;padding:25px;border:1px solid #729b75;border-radius:18px;max-width:90%}
+button{border:0;padding:12px 17px;margin:5px;border-radius:8px;font-weight:bold;cursor:pointer;color:white;background:#315c3d}
+button:hover{filter:brightness(1.2)}
+.red{background:#e32d43}.blue{background:#1678ee}.lime{background:#dfff45;color:#12210e}
+.help{font-size:13px;color:#b6d2bd;margin:8px}
+#restart{margin:8px auto 20px}
+</style>
+</head>
+<body>
+<header>
+<h1>⚽ PENALTY LEGENDS</h1>
+<p>Mouse Edition · A decisão está nas suas mãos</p>
+<div class="top">
+<div class="team" id="labelA">🔴 VERMELHO</div>
+<div class="score"><span id="scoreA">0</span> : <span id="scoreB">0</span></div>
+<div class="team" id="labelB">🔵 AZUL</div>
+</div>
+<div id="round">Escolha seu time</div>
+</header>
+
+<div class="arena">
+<canvas id="game" width="1000" height="560"></canvas>
+<div id="start">
+ <div class="panel">
+  <h2>ESCOLHA SEU TIME</h2>
+  <p>Jogue toda a partida com o mouse.</p>
+  <button class="red" onclick="startGame('red')">🔴 TIME VERMELHO</button>
+  <button class="blue" onclick="startGame('blue')">🔵 TIME AZUL</button>
+ </div>
+</div>
+</div>
+<div id="message">Escolha seu time para começar!</div>
+<div id="chargeWrap"><div id="charge"></div></div>
+<div class="help" id="help">No chute: segure e solte para carregar. Na defesa: mova e clique para pular.</div>
+<button id="restart" onclick="resetGame()">↻ NOVA PARTIDA</button>
+
+<script>
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+const W=1000,H=560;
+let userTeam="red",scoreA=0,scoreB=0,kickNo=0;
+let phase="shoot",started=false,busy=false,gameOver=false;
+let charging=false,chargeAt=0,chargePower=0;
+let mx=500,my=250,anim=null;
+let ball={x:500,y:450,r:13};
+let keeper={x:500,y:190,diveX:0,diveY:0};
+let player={x:500,y:400};
+let particles=[];
+const goal={x:315,y:105,w:370,h:135};
+
+function msg(s){document.getElementById("message").textContent=s}
+function score(){
+ document.getElementById("scoreA").textContent=scoreA;
+ document.getElementById("scoreB").textContent=scoreB;
+ document.getElementById("round").textContent=
+ gameOver?"PARTIDA ENCERRADA":
+ kickNo>=10?"⚡ MORTE SÚBITA":
+ "Cobrança "+(Math.floor(kickNo/2)+1)+" de 5 · "+
+ (phase==="shoot"?"SUA COBRANÇA":"DEFENDA!");
+ document.getElementById("labelA").textContent=
+ userTeam==="red"?"🔴 SEU TIME":"🔴 ADVERSÁRIO";
+ document.getElementById("labelB").textContent=
+ userTeam==="blue"?"🔵 SEU TIME":"🔵 ADVERSÁRIO";
+}
+function startGame(t){
+ userTeam=t;started=true;scoreA=scoreB=kickNo=0;
+ phase="shoot";gameOver=false;busy=false;
+ document.getElementById("start").style.display="none";
+ score();msg("Segure o mouse para carregar o chute!");
+ draw();
+}
+function resetGame(){
+ started=false;gameOver=false;busy=false;charging=false;
+ document.getElementById("start").style.display="flex";
+ document.getElementById("charge").style.width="0";
+ msg("Escolha seu time para começar!");
+ score();draw();
+}
+function shirt(){return userTeam==="red"?"#ec3448":"#1980ff"}
+function drawPerson(x,y,color,goalkeeper=false,pose=0){
+ ctx.save();ctx.translate(x,y);ctx.rotate(pose*.16);
+ // sombra
+ ctx.fillStyle="#0004";ctx.beginPath();ctx.ellipse(0,35,24,8,0,0,Math.PI*2);ctx.fill();
+ // pernas
+ ctx.strokeStyle="#171c1b";ctx.lineWidth=12;ctx.lineCap="round";
+ ctx.beginPath();ctx.moveTo(-7,12);ctx.lineTo(-13,35);
+ ctx.moveTo(7,12);ctx.lineTo(13,35);ctx.stroke();
+ // chuteiras
+ ctx.strokeStyle="#f3f3e7";ctx.lineWidth=7;
+ ctx.beginPath();ctx.moveTo(-13,35);ctx.lineTo(-21,36);
+ ctx.moveTo(13,35);ctx.lineTo(21,36);ctx.stroke();
+ // camisa
+ ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(-18,-24,36,39,7);ctx.fill();
+ ctx.fillStyle="#ffffffcc";ctx.fillRect(-3,-21,6,30);
+ // braços
+ ctx.strokeStyle=color;ctx.lineWidth=9;
+ ctx.beginPath();ctx.moveTo(-14,-15);ctx.lineTo(-27,-1+pose*4);
+ ctx.moveTo(14,-15);ctx.lineTo(27,-1-pose*4);ctx.stroke();
+ if(goalkeeper){
+  ctx.fillStyle="#f3ed45";
+  ctx.beginPath();ctx.arc(-29,-1+pose*4,8,0,Math.PI*2);
+  ctx.arc(29,-1-pose*4,8,0,Math.PI*2);ctx.fill();
+ }
+ // pescoço e cabeça
+ ctx.fillStyle="#b97850";ctx.fillRect(-5,-31,10,9);
+ ctx.fillStyle="#dca17a";ctx.beginPath();ctx.arc(0,-40,13,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle="#33231b";ctx.beginPath();ctx.arc(0,-44,13,Math.PI,Math.PI*2);ctx.fill();
+ ctx.restore();
+}
+function drawBall(x,y,r,rotation=0){
+ ctx.save();ctx.translate(x,y);ctx.rotate(rotation);
+ ctx.fillStyle="#0005";ctx.beginPath();ctx.ellipse(3,r*.9,r*1.1,r*.4,0,0,Math.PI*2);ctx.fill();
+ const g=ctx.createRadialGradient(-r*.3,-r*.4,1,0,0,r*1.3);
+ g.addColorStop(0,"#fff");g.addColorStop(1,"#bbc5c1");
+ ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle="#202d2b";ctx.lineWidth=Math.max(1,r*.12);ctx.stroke();
+ ctx.fillStyle="#202d2b";
+ for(let i=0;i<5;i++){
+  const a=i*Math.PI*2/5;
+  ctx.beginPath();ctx.arc(Math.cos(a)*r*.48,Math.sin(a)*r*.48,r*.19,0,Math.PI*2);ctx.fill();
+ }
+ ctx.restore();
+}
+function draw(){
+ ctx.clearRect(0,0,W,H);
+ // arquibancada
+ let sky=ctx.createLinearGradient(0,0,0,160);
+ sky.addColorStop(0,"#111e25");sky.addColorStop(1,"#344b43");
+ ctx.fillStyle=sky;ctx.fillRect(0,0,W,160);
+ for(let row=0;row<4;row++)for(let i=0;i<100;i++){
+  ctx.fillStyle=["#f6e9cc","#ff4b50","#ffd64b","#54a8ff","#c4f5e0"][(i*7+row*3)%5];
+  ctx.beginPath();ctx.arc(i*10+5,18+row*26,2.5,0,Math.PI*2);ctx.fill();
+ }
+ // gramado em faixas
+ for(let i=0;i<10;i++){
+  ctx.fillStyle=i%2?"#21823a":"#2a9142";
+  ctx.fillRect(i*100,155,100,H-155);
+ }
+ // linhas
+ ctx.strokeStyle="#ffffffb0";ctx.lineWidth=3;
+ ctx.strokeRect(35,160,930,380);
+ ctx.strokeRect(235,160,530,220);
+ ctx.strokeRect(340,160,320,120);
+ ctx.beginPath();ctx.arc(500,380,75,Math.PI,Math.PI*2);ctx.stroke();
+ // luzes
+ for(let x of [80,920]){
+  ctx.fillStyle="#f9f4c6";ctx.beginPath();ctx.arc(x,90,13,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#fff4aa18";ctx.beginPath();ctx.arc(x,90,42,0,Math.PI*2);ctx.fill();
+ }
+ // gol e rede
+ ctx.fillStyle="#d8e4df";ctx.fillRect(goal.x,goal.y,goal.w,goal.h);
+ ctx.strokeStyle="#94aaa0";ctx.lineWidth=1;
+ for(let x=goal.x+8;x<goal.x+goal.w;x+=18){
+  ctx.beginPath();ctx.moveTo(x,goal.y);ctx.lineTo(x,goal.y+goal.h);ctx.stroke();
+ }
+ for(let y=goal.y+8;y<goal.y+goal.h;y+=18){
+  ctx.beginPath();ctx.moveTo(goal.x,y);ctx.lineTo(goal.x+goal.w,y);ctx.stroke();
+ }
+ ctx.strokeStyle="#fff";ctx.lineWidth=8;ctx.strokeRect(goal.x,goal.y,goal.w,goal.h);
+ // alvos visuais do mouse
+ if(started&&!busy&&!gameOver){
+  ctx.strokeStyle="#eaff70bb";ctx.lineWidth=3;
+  ctx.beginPath();ctx.arc(mx,my,16,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(mx-25,my);ctx.lineTo(mx+25,my);
+  ctx.moveTo(mx,my-25);ctx.lineTo(mx,my+25);ctx.stroke();
+ }
+ // goleiro
+ drawPerson(keeper.x,keeper.y,"#14bfc0",true,keeper.diveX);
+ // cobrador
+ drawPerson(player.x,player.y,shirt(),false,0);
+ // bola
+ drawBall(ball.x,ball.y,ball.r,performance.now()/350);
+ // indicador força
+ if(charging){
+  const p=Math.min(100,40+(performance.now()-chargeAt)/15);
+  ctx.fillStyle="#06150bc9";ctx.fillRect(385,500,230,22);
+  ctx.fillStyle="#dfff45";ctx.fillRect(390,505,220*(p/100),12);
+  ctx.fillStyle="white";ctx.font="bold 14px Arial";
+  ctx.fillText("FORÇA "+Math.round(p)+"%",500,490);
+ }
+}
+function canvasPos(e){
+ const r=canvas.getBoundingClientRect();
+ return {x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height};
+}
+canvas.addEventListener("pointermove",e=>{
+ const p=canvasPos(e);mx=p.x;my=p.y;
+ if(charging){
+  const power=Math.min(100,40+(performance.now()-chargeAt)/15);
+  document.getElementById("charge").style.width=power+"%";
+ }
+});
+canvas.addEventListener("pointerdown",e=>{
+ if(!started||busy||gameOver)return;
+ e.preventDefault();
+ const p=canvasPos(e);mx=p.x;my=p.y;
+ if(phase==="shoot"){
+  charging=true;chargeAt=performance.now();
+  canvas.setPointerCapture(e.pointerId);
+ }else{
+  const side=p.x<goal.x+goal.w*.36?"left":
+    p.x>goal.x+goal.w*.64?"right":"center";
+  defend(side);
+ }
+});
+canvas.addEventListener("pointerup",e=>{
+ if(!charging)return;
+ charging=false;
+ document.getElementById("charge").style.width="0";
+ const power=Math.min(100,Math.max(40,40+(performance.now()-chargeAt)/15));
+ shoot(mx,my,power);
+});
+canvas.addEventListener("pointercancel",()=>{
+ charging=false;document.getElementById("charge").style.width="0";
+});
+
+function shoot(x,y,power){
+ if(!started||busy||gameOver||phase!=="shoot")return;
+ busy=true;
+ // restringir alvo ao gol
+ const tx=Math.max(goal.x+20,Math.min(goal.x+goal.w-20,x));
+ const ty=Math.max(goal.y+15,Math.min(goal.y+goal.h-10,y));
+ const side=tx<goal.x+goal.w*.36?"left":
+  tx>goal.x+goal.w*.64?"right":"center";
+ // precisão melhora com força moderada
+ const spread=(100-power)*.48;
+ const finalX=Math.max(goal.x+12,Math.min(goal.x+goal.w-12,tx+(Math.random()-.5)*spread));
+ const finalY=ty+(Math.random()-.5)*spread*.35;
+ const keeperSide=["left","center","right"][Math.floor(Math.random()*3)];
+ const save=keeperSide===side && Math.random()<(power>92?.48:.72);
+ msg("Você bateu! A bola vai para o gol...");
+ animateShot(finalX,finalY,keeperSide,save,()=>{
+  if(save)msg("🧤 DEFESA DO GOLEIRO!");
+  else{
+   if(userTeam==="red")scoreA++;else scoreB++;
+   msg("⚽ GOOOOOL! Chute certeiro!");
+  }
+  finishKick();
+ });
+}
+function defend(side){
+ if(!started||busy||gameOver||phase!=="defend")return;
+ busy=true;
+ const shotSide=["left","center","right"][Math.floor(Math.random()*3)];
+ const tx=shotSide==="left"?goal.x+48:
+  shotSide==="right"?goal.x+goal.w-48:goal.x+goal.w/2;
+ const ty=goal.y+35+Math.random()*65;
+ const saved=side===shotSide;
+ msg("O adversário chutou! Seu goleiro está pulando...");
+ animateShot(tx,ty,side,saved,()=>{
+  if(saved)msg("🧤 DEFESAÇA! Você acertou o canto!");
+  else{
+   if(userTeam==="red")scoreB++;else scoreA++;
+   msg("⚽ Gol do adversário!");
+  }
+  finishKick();
+ });
+}
+function animateShot(tx,ty,diveSide,saved,callback){
+ const sx=ball.x,sy=ball.y;
+ const kx=keeper.x,ky=keeper.y;
+ const dx=diveSide==="left"?-100:diveSide==="right"?100:0;
+ const start=performance.now(),duration=650;
+ function frame(now){
+  const t=Math.min(1,(now-start)/duration);
+  const ease=t*t*(3-2*t);
+  ball.x=sx+(tx-sx)*ease;
+  ball.y=sy+(ty-sy)*ease-55*Math.sin(t*Math.PI);
+  ball.r=13-5*t;
+  keeper.x=kx+dx*ease;
+  keeper.y=ky+(diveSide==="center"?0:24*ease);
+  keeper.diveX=diveSide==="left"?-1:diveSide==="right"?1:0;
+  draw();
+  if(t<1)requestAnimationFrame(frame);
+  else{
+   setTimeout(()=>{
+    ball={x:500,y:450,r:13};
+    keeper={x:500,y:190,diveX:0,diveY:0};
+    busy=false;callback();draw();
+   },180);
+  }
+ }
+ requestAnimationFrame(frame);
+}
+function finishKick(){
+ kickNo++;
+ phase=phase==="shoot"?"defend":"shoot";
+ // Após 10 cobranças, encerra se não estiver empatado.
+ // Se empatar, morte súbita continua até alguém ficar na frente
+ if(kickNo>=10 && scoreA!==scoreB){
+  gameOver=true;
+  const userScore=userTeam==="red"?scoreA:scoreB;
+  const oppScore=userTeam==="red"?scoreB:scoreA;
+  msg(userScore>oppScore?"🏆 VOCÊ VENCEU A DISPUTA!":"😢 FIM DE JOGO! O ADVERSÁRIO VENCEU.");
+ }else if(kickNo>=10 && scoreA===scoreB){
+  msg("⚡ MORTE SÚBITA! Cada gol pode decidir tudo!");
+ }
+ score();draw();
+}
+function loop(){
+ if(charging){
+  const p=Math.min(100,40+(performance.now()-chargeAt)/15);
+  document.getElementById("charge").style.width=p+"%";
+ }
+ draw();
+ requestAnimationFrame(loop);
+}
+score();loop();
+</script>
+</body>
+</html>
