@@ -14,10 +14,11 @@ select,button{padding:12px;border:0;border-radius:9px;font-weight:bold;cursor:po
 select{background:#182b42;color:white}
 button{background:#ffd45c;color:#142238}
 button:hover{filter:brightness(1.12)}
+button:disabled{opacity:.45;cursor:not-allowed}
 .score{font-size:38px;font-weight:900;margin:10px}
 #status{color:#ffd45c;font-weight:bold;min-height:24px}
 .arena{width:min(900px,100%);margin:auto;position:relative;overflow:hidden;border:3px solid #32465d;border-radius:14px}
-canvas{width:100%;display:block;touch-action:manipulation}
+canvas{width:100%;height:auto;display:block;touch-action:manipulation}
 .help{color:#a9bdd2;font-size:13px;line-height:1.8;margin:15px}
 </style>
 </head>
@@ -25,15 +26,15 @@ canvas{width:100%;display:block;touch-action:manipulation}
 <h1>⚽ PENALTY <span>LEGENDS</span></h1>
 
 <div class="menu">
-<select id="teamA">
+<select id="teamA" aria-label="Time A">
 <option value="br">🇧🇷 Brasil</option>
 <option value="ar">🇦🇷 Argentina</option>
 </select>
-<select id="teamB">
+<select id="teamB" aria-label="Time B">
 <option value="ar">🇦🇷 Argentina</option>
 <option value="br">🇧🇷 Brasil</option>
 </select>
-<select id="mode">
+<select id="mode" aria-label="Modo de jogo">
 <option value="cpu">1 jogador vs computador</option>
 <option value="pvp">2 jogadores</option>
 </select>
@@ -54,236 +55,469 @@ canvas{width:100%;display:block;touch-action:manipulation}
 <button onclick="kick(0)">↑ Centro</button>
 <button onclick="kick(1)">↗ Canto direito</button>
 <button onclick="save(-1)">🧤 Defender esquerda</button>
+<button onclick="save(0)">🧤 Defender centro</button>
 <button onclick="save(1)">🧤 Defender direita</button>
 </div>
 
 <div class="help">
 <strong>Como jogar:</strong> escolha um canto para chutar ou defender.<br>
-No modo de dois jogadores, alternem as cobranças.<br>
-Cada equipe tem cinco cobranças. Se houver empate, a disputa continua.
+No modo de dois jogadores, um jogador chuta e o outro escolhe a defesa.<br>
+Cada equipe tem cinco cobranças. Se houver empate, a disputa continua em morte súbita.
 </div>
 
 <script>
-const c=document.getElementById('c'),x=c.getContext('2d');
+const c=document.getElementById('c');
+const x=c.getContext('2d');
 const W=900,H=550;
 const $=id=>document.getElementById(id);
+
 const teams={
  br:{name:'BRASIL',flag:'🇧🇷',shirt:'#ffdf24',short:'#168342'},
  ar:{name:'ARGENTINA',flag:'🇦🇷',shirt:'#83d9f5',short:'#f8f8f8'}
 };
-let score=[0,0],shots=[[],[]],shooter=0,mode='cpu';
-let running=false,phase='idle',ball={x:450,y:400,z:0};
-let keeper={x:450,y:125,dive:0,dx:0};
-let target={x:450,y:100},particles=[],anim=0,last=0;
-let teamsNow=['br','ar'],round=0,message='Escolha os times e comece!';
-let lastShot=0;
+
+let score=[0,0];
+let shots=[[],[]];
+let shooter=0,mode='cpu';
+let running=false,phase='idle';
+let ball={x:450,y:400,z:0};
+let keeper={x:450,y:125,destX:450};
+let target={x:450,y:100,dir:0};
+let particles=[],anim=0,lastShot=0;
+let teamsNow=['br','ar'];
+let message='Escolha os times e comece!';
+let previous=0;
+let cpuScheduled=false;
 
 function start(){
  teamsNow=[$('teamA').value,$('teamB').value];
+
  if(teamsNow[0]===teamsNow[1]){
   teamsNow[1]=teamsNow[0]==='br'?'ar':'br';
   $('teamB').value=teamsNow[1];
  }
- mode=$('mode').value;score=[0,0];shots=[[],[]];
- shooter=0;round=0;running=true;phase='aim';
- ball={x:450,y:400,z:0};keeper={x:450,y:125,dive:0,dx:0};
- particles=[];message='Sua vez! Escolha onde chutar.';
+
+ mode=$('mode').value;
+ score=[0,0];
+ shots=[[],[]];
+ shooter=0;
+ running=true;
+ phase='aim';
+ ball={x:450,y:400,z:0};
+ keeper={x:450,y:125,destX:450};
+ target={x:450,y:100,dir:0};
+ particles=[];
+ cpuScheduled=false;
+ message='Sua vez! Escolha onde chutar.';
  updateUI();
 }
 
 function updateUI(){
- $('a').textContent=score[0];$('b').textContent=score[1];
- $('status').textContent=teamsNow[shooter].toUpperCase()+' — '+message;
+ $('a').textContent=score[0];
+ $('b').textContent=score[1];
+
+ let text=teams[teamsNow[shooter]].name+' — '+message;
+ if(phase==='over')text=message;
+
+ $('status').textContent=text;
+
+ const waitingForShot=running&&phase==='aim';
+ const waitingForSave=running&&phase==='save';
+
+ document.querySelectorAll('.menu button').forEach((button,i)=>{
+  if(i===0) return;
+  if(i<=3) button.disabled=!waitingForShot ||
+   (mode==='cpu'&&shooter===1);
+  else button.disabled=!waitingForSave;
+ });
 }
 
 function kick(dir){
  if(!running||phase!=='aim')return;
  if(mode==='cpu'&&shooter===1)return;
- target.x=dir<0?340:dir>0?560:450;
- target.y=dir===0?145:105;
- shootBall();
-}
 
-function shootBall(){
- phase='flight';lastShot=performance.now();
- ball={x:450,y:400,z:0};
- keeper.dx=(target.x-keeper.x)*.85;
- keeper.dive=1;
- message='CHUTE! ⚡';updateUI();
+ setTarget(dir);
+
+ if(mode==='pvp'){
+  phase='save';
+  message='Defensor: escolha para onde pular!';
+  updateUI();
+ }else{
+  // O goleiro do computador escolhe sua defesa.
+  const cpuSave=Math.floor(Math.random()*3)-1;
+  beginFlight(cpuSave);
+ }
 }
 
 function save(dir){
+ if(!running||phase!=='save')return;
+ beginFlight(dir);
+}
+
+function setTarget(dir){
+ target.dir=dir;
+ target.x=dir<0?340:dir>0?560:450;
+ target.y=dir===0?145:105;
+}
+
+function keeperPosition(dir){
+ // Posições suficientemente afastadas para diferenciar
+ // uma defesa correta de uma defesa no lado errado.
+ return dir<0?250:dir>0?650:450;
+}
+
+function beginFlight(keeperDir){
  if(!running)return;
- if(phase==='aim'&&mode==='pvp'){
-  target.x=dir<0?340:560;target.y=105;
-  phase='flight';lastShot=performance.now();
-  ball={x:450,y:400,z:0};keeper.dive=1;
-  keeper.dx=dir*120;message='CHUTE!';updateUI();
- }
+
+ phase='flight';
+ lastShot=performance.now();
+ cpuScheduled=false;
+
+ ball={x:450,y:400,z:0};
+ keeper.destX=keeperPosition(keeperDir);
+
+ message='CHUTE! ⚡';
+ updateUI();
 }
 
 function resolve(){
- let d=Math.abs(target.x-keeper.x);
- let saved=d<75&&Math.random()<.85;
- let goal=!saved;
+ // Impede que a mesma cobrança seja contabilizada duas vezes.
+ if(!running||phase!=='flight')return;
+
+ const saved=target.dir===
+  (keeper.destX<350?-1:keeper.destX>550?1:0);
+
+ const goal=!saved;
+
  if(goal)score[shooter]++;
  shots[shooter].push(goal);
+
  message=goal?'GOOOOOOL! ⚽':'DEFESAÇA! 🧤';
- if(goal)burst(target.x,target.y,'#ffdf60');
- else burst(keeper.x,keeper.y,'#75dcff');
+
+ if(goal){
+  burst(target.x,target.y,'#ffdf60');
+ }else{
+  burst(keeper.x,keeper.y,'#75dcff');
+ }
+
+ phase='result';
+ lastShot=performance.now();
  updateUI();
- phase='result';lastShot=performance.now();
+
+ if(checkWinner())return;
+}
+
+function checkWinner(){
+ const a=shots[0].length;
+ const b=shots[1].length;
+
+ // Encerramento antecipado quando a diferença é inalcançável.
+ if(a<5||b<5){
+  const remainingA=Math.max(0,5-a);
+  const remainingB=Math.max(0,5-b);
+
+  if(score[0]>score[1]+remainingB){
+   finish(0);
+   return true;
+  }
+
+  if(score[1]>score[0]+remainingA){
+   finish(1);
+   return true;
+  }
+ }
+
+ // Após cinco cobranças, decidir somente quando ambos
+ // tiverem executado o mesmo número de chutes.
+ if(a>=5&&b>=5&&a===b&&score[0]!==score[1]){
+  finish(score[0]>score[1]?0:1);
+  return true;
+ }
+
+ return false;
+}
+
+function finish(winner){
+ running=false;
+ phase='over';
+ message='🏆 VENCEDOR: '+teams[teamsNow[winner]].name+'!';
+ burst(450,100,'#ffdf60');
+ updateUI();
 }
 
 function next(){
- round++;
- if(shots[0].length>=5&&shots[1].length>=5&&
-    shots[0].length===shots[1].length&&score[0]!==score[1]){
-  running=false;phase='over';
-  message='🏆 VENCEDOR: '+teams[teamsNow[score[0]>score[1]?0:1]].name;
-  updateUI();return;
- }
- shooter=round%2===0?0:1;
- phase='aim';keeper={x:450,y:125,dive:0,dx:0};
+ if(!running)return;
+
+ // Alternância correta, inclusive durante a morte súbita.
+ shooter=shots[0].length===shots[1].length?0:1;
+
+ phase='aim';
+ keeper={x:450,y:125,destX:450};
  ball={x:450,y:400,z:0};
- message=mode==='cpu'&&shooter===1?'Computador cobrando...':'Escolha o canto do chute.';
+ target={x:450,y:100,dir:0};
+
+ message=mode==='cpu'&&shooter===1
+  ?'Computador preparando a cobrança...'
+  :'Escolha o canto do chute.';
+
+ cpuScheduled=false;
  updateUI();
 }
 
 function burst(px,py,color){
  for(let i=0;i<25;i++){
-  let a=Math.random()*Math.PI*2,s=60+Math.random()*170;
-  particles.push({x:px,y:py,vx:Math.cos(a)*s,vy:Math.sin(a)*s,
-  life:.5+Math.random()*.6,color});
+  const a=Math.random()*Math.PI*2;
+  const s=60+Math.random()*170;
+
+  particles.push({
+   x:px,y:py,
+   vx:Math.cos(a)*s,
+   vy:Math.sin(a)*s,
+   life:.5+Math.random()*.6,
+   color
+  });
  }
 }
 
 function rect(a,b,w,h,color){
- x.fillStyle=color;x.fillRect(a,b,w,h);
+ x.fillStyle=color;
+ x.fillRect(a,b,w,h);
 }
 
 function player(px,py,shirt,short,goalie=false){
- x.save();x.translate(px,py);
+ x.save();
+ x.translate(px,py);
+
  x.fillStyle='#10261977';
- x.beginPath();x.ellipse(0,3,24,7,0,0,7);x.fill();
- let movement=Math.sin(anim*8)*3;
- // legs
- x.strokeStyle='#d5a17c';x.lineWidth=6;
- x.beginPath();x.moveTo(-7,-20);x.lineTo(-9+movement,-5);
- x.moveTo(7,-20);x.lineTo(9-movement,-5);x.stroke();
- x.strokeStyle=goalie?'#202c3c':'#f4f4f4';x.lineWidth=8;
- x.beginPath();x.moveTo(-9+movement,-5);x.lineTo(-12+movement,0);
- x.moveTo(9-movement,-5);x.lineTo(12-movement,0);x.stroke();
- // arms
- x.strokeStyle='#d6a17b';x.lineWidth=7;
- x.beginPath();x.moveTo(-11,-49);x.lineTo(-19,-31);
- x.moveTo(11,-49);x.lineTo(19,-31);x.stroke();
- // shirt
+ x.beginPath();
+ x.ellipse(0,3,24,7,0,0,Math.PI*2);
+ x.fill();
+
+ const movement=Math.sin(anim*8)*3;
+
+ x.strokeStyle='#d5a17c';
+ x.lineWidth=6;
+ x.beginPath();
+ x.moveTo(-7,-20);
+ x.lineTo(-9+movement,-5);
+ x.moveTo(7,-20);
+ x.lineTo(9-movement,-5);
+ x.stroke();
+
+ x.strokeStyle=goalie?'#202c3c':'#f4f4f4';
+ x.lineWidth=8;
+ x.beginPath();
+ x.moveTo(-9+movement,-5);
+ x.lineTo(-12+movement,0);
+ x.moveTo(9-movement,-5);
+ x.lineTo(12-movement,0);
+ x.stroke();
+
+ x.strokeStyle='#d6a17b';
+ x.lineWidth=7;
+ x.beginPath();
+ x.moveTo(-11,-49);
+ x.lineTo(-19,-31);
+ x.moveTo(11,-49);
+ x.lineTo(19,-31);
+ x.stroke();
+
  rect(-13,-54,26,27,shirt);
  rect(-13,-29,26,12,short);
- // gloves
- if(goalie){x.fillStyle='#f3dc52';x.beginPath();x.arc(-19,-29,5,0,7);x.arc(19,-29,5,0,7);x.fill()}
- // head
- x.fillStyle='#d6a17b';x.beginPath();x.arc(0,-63,10,0,7);x.fill();
- x.fillStyle='#30251f';x.beginPath();x.arc(0,-67,10,Math.PI,7);x.fill();
+
+ if(goalie){
+  x.fillStyle='#f3dc52';
+  x.beginPath();
+  x.arc(-19,-29,5,0,Math.PI*2);
+  x.arc(19,-29,5,0,Math.PI*2);
+  x.fill();
+ }
+
+ x.fillStyle='#d6a17b';
+ x.beginPath();
+ x.arc(0,-63,10,0,Math.PI*2);
+ x.fill();
+
+ x.fillStyle='#30251f';
+ x.beginPath();
+ x.arc(0,-67,10,Math.PI,Math.PI*2);
+ x.fill();
+
  x.restore();
 }
 
 function draw(){
  x.clearRect(0,0,W,H);
- // night sky and stadium
- let sky=x.createLinearGradient(0,0,0,180);
- sky.addColorStop(0,'#101b30');sky.addColorStop(1,'#52687b');
+
+ const sky=x.createLinearGradient(0,0,0,180);
+ sky.addColorStop(0,'#101b30');
+ sky.addColorStop(1,'#52687b');
  rect(0,0,W,H,sky);
- // stadium crowd
- for(let row=0;row<5;row++)for(let i=0;i<100;i++){
-  x.fillStyle=['#d7b86b','#e4eaf0','#3c6685','#ba5353','#27364a'][(i+row*3)%5];
-  x.globalAlpha=.75;x.beginPath();
-  x.arc(i*9,20+row*13,3,0,7);x.fill();
+
+ // Torcida
+ for(let row=0;row<5;row++){
+  for(let i=0;i<100;i++){
+   x.fillStyle=['#d7b86b','#e4eaf0','#3c6685',
+    '#ba5353','#27364a'][(i+row*3)%5];
+   x.globalAlpha=.75;
+   x.beginPath();
+   x.arc(i*9,20+row*13,3,0,Math.PI*2);
+   x.fill();
+  }
  }
  x.globalAlpha=1;
+
  rect(0,83,W,30,'#667c8b');
- // pitch
  rect(0,113,W,437,'#3e9f40');
- for(let i=0;i<7;i++)rect(0,113+i*63,W,31,i%2?'#49aa43':'#3e9c3e');
- // field lines
- x.strokeStyle='#edfff0';x.lineWidth=3;
- x.beginPath();x.moveTo(0,188);x.lineTo(W,188);
+
+ for(let i=0;i<7;i++){
+  rect(0,113+i*63,W,31,i%2?'#49aa43':'#3e9c3e');
+ }
+
+ x.strokeStyle='#edfff0';
+ x.lineWidth=3;
+ x.beginPath();
+ x.moveTo(0,188);x.lineTo(W,188);
  x.moveTo(0,500);x.lineTo(W,500);
- x.moveTo(150,188);x.lineTo(150,310);x.lineTo(750,310);x.lineTo(750,188);
+ x.moveTo(150,188);x.lineTo(150,310);
+ x.lineTo(750,310);x.lineTo(750,188);
  x.stroke();
- // goal net
+
+ // Gol e rede
  rect(225,27,450,104,'#d9e4e8');
  rect(235,36,430,94,'#243447');
- x.strokeStyle='#b8cad3';x.lineWidth=1;
+
+ x.strokeStyle='#b8cad3';
+ x.lineWidth=1;
+
  for(let i=0;i<=30;i++){
-  x.beginPath();x.moveTo(235+i*14.3,36);x.lineTo(235+i*14.3,130);x.stroke();
+  x.beginPath();
+  x.moveTo(235+i*14.3,36);
+  x.lineTo(235+i*14.3,130);
+  x.stroke();
  }
+
  for(let i=0;i<8;i++){
-  x.beginPath();x.moveTo(235,36+i*13);x.lineTo(665,36+i*13);x.stroke();
+  x.beginPath();
+  x.moveTo(235,36+i*13);
+  x.lineTo(665,36+i*13);
+  x.stroke();
  }
- x.strokeStyle='#fff';x.lineWidth=8;
+
+ x.strokeStyle='#fff';
+ x.lineWidth=8;
  x.strokeRect(235,28,430,103);
- // keeper
+
  player(keeper.x,keeper.y,'#25354a','#3b4b60',true);
- // shooter
- player(450,407,teams[teamsNow[shooter]].shirt,
- teams[teamsNow[shooter]].short);
- // ball trajectory
- if(phase==='flight'){
-  let t=Math.min(1,(performance.now()-lastShot)/700);
-  let ease=t*t*(3-2*t);
-  ball.x=450+(target.x-450)*ease;
-  ball.y=400+(target.y-400)*ease;
-  ball.z=Math.sin(t*Math.PI)*100;
-  if(t>=1)resolve();
- }else{
-  ball.x=450;ball.y=400;ball.z=0;
- }
- // ball
- x.save();x.translate(ball.x,ball.y-ball.z);
- x.fillStyle='#17251a66';x.beginPath();x.ellipse(0,ball.z+8,10,4,0,0,7);x.fill();
- x.fillStyle='#fff';x.beginPath();x.arc(0,0,9,0,7);x.fill();
- x.strokeStyle='#252d35';x.lineWidth=2;x.stroke();
+
+ player(450,407,
+  teams[teamsNow[shooter]].shirt,
+  teams[teamsNow[shooter]].short);
+
+ // Bola: a posição é atualizada exclusivamente no loop.
+ x.save();
+ x.translate(ball.x,ball.y-ball.z);
+
+ x.fillStyle='#17251a66';
+ x.beginPath();
+ x.ellipse(0,ball.z+8,10,4,0,0,Math.PI*2);
+ x.fill();
+
+ x.fillStyle='#fff';
+ x.beginPath();
+ x.arc(0,0,9,0,Math.PI*2);
+ x.fill();
+
+ x.strokeStyle='#252d35';
+ x.lineWidth=2;
+ x.stroke();
+
  x.fillStyle='#252d35';
  for(let i=0;i<5;i++){
-  let a=i*Math.PI*2/5;x.beginPath();x.arc(Math.cos(a)*4,Math.sin(a)*4,2,0,7);x.fill();
+  const a=i*Math.PI*2/5;
+  x.beginPath();
+  x.arc(Math.cos(a)*4,Math.sin(a)*4,2,0,Math.PI*2);
+  x.fill();
  }
+
  x.restore();
- // aim indicator
+
  if(phase==='aim'&&!(mode==='cpu'&&shooter===1)){
-  x.strokeStyle='#ffdc66';x.lineWidth=3;x.beginPath();
-  x.arc(target.x,target.y,14+Math.sin(anim*5)*3,0,7);x.stroke();
+  x.strokeStyle='#ffdc66';
+  x.lineWidth=3;
+  x.beginPath();
+  x.arc(target.x,target.y,14+Math.sin(anim*5)*3,
+   0,Math.PI*2);
+  x.stroke();
  }
- // particles
- for(let p of particles){
-  x.globalAlpha=Math.max(0,p.life);x.fillStyle=p.color;
-  x.beginPath();x.arc(p.x,p.y,4,0,7);x.fill();
+
+ for(const p of particles){
+  x.globalAlpha=Math.max(0,p.life);
+  x.fillStyle=p.color;
+  x.beginPath();
+  x.arc(p.x,p.y,4,0,Math.PI*2);
+  x.fill();
  }
  x.globalAlpha=1;
 }
 
-let previous=0;
 function loop(now){
- let dt=Math.min((now-previous)/1000,.035);previous=now;anim+=dt;
+ const dt=previous?Math.min((now-previous)/1000,.035):0;
+ previous=now;
+ anim+=dt;
+
  if(running&&!document.hidden){
   if(phase==='flight'){
-   let t=(now-lastShot)/700;
-   keeper.x+=((target.x-keeper.x)*.06);
-   if(t>=1)resolve();
+   const t=Math.min(1,(now-lastShot)/700);
+   const ease=t*t*(3-2*t);
+
+   ball.x=450+(target.x-450)*ease;
+   ball.y=400+(target.y-400)*ease;
+   ball.z=Math.sin(t*Math.PI)*100;
+
+   keeper.x+= (keeper.destX-keeper.x)*Math.min(1,dt*12);
+
+   if(t>=1){
+    ball.x=target.x;
+    ball.y=target.y;
+    ball.z=0;
+    keeper.x=keeper.destX;
+    resolve();
+   }
   }
-  if(phase==='result'&&now-lastShot>1100)next();
-  if(mode==='cpu'&&shooter===1&&phase==='aim'){
-   target.x=340+Math.random()*220;target.y=85+Math.random()*90;
-   shootBall();
+
+  if(phase==='result'&&now-lastShot>1100){
+   next();
+  }
+
+  // O computador escolhe apenas uma cobrança por turno.
+  if(mode==='cpu'&&shooter===1&&phase==='aim'&&!cpuScheduled){
+   cpuScheduled=true;
+   setTarget(Math.floor(Math.random()*3)-1);
+   phase='save';
+   message='Computador chutando! Escolha a defesa.';
+   updateUI();
   }
  }
- for(let p of particles){
-  p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=100*dt;p.life-=dt;
+
+ for(const p of particles){
+  p.x+=p.vx*dt;
+  p.y+=p.vy*dt;
+  p.vy+=100*dt;
+  p.life-=dt;
  }
+
  particles=particles.filter(p=>p.life>0);
- draw();requestAnimationFrame(loop);
+
+ draw();
+ requestAnimationFrame(loop);
 }
+
+document.addEventListener('visibilitychange',()=>{
+ previous=0;
+});
+
+updateUI();
 requestAnimationFrame(loop);
 </script>
 </body>
