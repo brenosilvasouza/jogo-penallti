@@ -44,7 +44,7 @@ h1 span { color: var(--gold); }
   letter-spacing: 3px;
 }
 
-.panel {
+.panel, .action-panel {
   width: min(960px, 100%);
   margin: 0 auto 14px;
   padding: 14px;
@@ -96,7 +96,7 @@ button {
 }
 
 button:disabled {
-  opacity: .35;
+  opacity: .4;
   cursor: not-allowed;
 }
 
@@ -120,7 +120,7 @@ button:hover:not(:disabled) {
   width: min(700px, 100%);
   margin: 14px auto;
   padding: 13px;
-  background: #101f32;
+  background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 14px;
 }
@@ -180,15 +180,6 @@ canvas {
   width: 100%;
   height: auto;
   aspect-ratio: 900 / 550;
-}
-
-.action-panel {
-  width: min(960px, 100%);
-  margin: 14px auto;
-  padding: 14px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 14px;
 }
 
 .action-title {
@@ -279,7 +270,10 @@ canvas {
     grid-template-columns: 1fr 1fr;
   }
 
-  .field select { width: 100%; font-size: 12px; }
+  .field select {
+    width: 100%;
+    font-size: 12px;
+  }
 
   #startBtn, #soundBtn {
     width: 100%;
@@ -448,12 +442,7 @@ const H = 550;
 const $ = id => document.getElementById(id);
 
 const TEAMS = {
-  br: {
-    name: "BRASIL",
-    flag: "🇧🇷",
-    shirt: "#f5d927",
-    shorts: "#168345"
-  },
+  br: { name: "BRASIL", flag: "🇧🇷", shirt: "#f5d927", shorts: "#168345" },
   ar: { name: "ARGENTINA", flag: "🇦🇷", shirt: "#83d8f4", shorts: "#f5f5f5" },
   pt: { name: "PORTUGAL", flag: "🇵🇹", shirt: "#d91f35", shorts: "#176b43" },
   es: { name: "ESPANHA", flag: "🇪🇸", shirt: "#e63932", shorts: "#f2c230" },
@@ -480,7 +469,7 @@ const state = {
   scores: [0, 0],
   history: [[], []],
   teams: ["br", "ar"],
-  target: { x: 450, y: 205, dir: 0 },
+  target: { x: 450, y: 205, dir: 0, keeperRead: 0 },
   ball: { x: 450, y: 420, z: 0 },
   keeper: { x: 450, y: 245, destX: 450 },
   message: "Escolha os times e comece!",
@@ -489,8 +478,7 @@ const state = {
   shotStart: 0,
   previous: 0,
   cpuScheduled: false,
-  particles: [],
-  power: 1
+  particles: []
 };
 
 function team(index = state.turn) {
@@ -507,6 +495,10 @@ function xForDirection(dir) {
 
 function yForDirection(dir) {
   return dir === 0 ? 205 : 220;
+}
+
+function cpuKickDirection() {
+  return [-1, 0, 1][Math.floor(Math.random() * 3)];
 }
 
 function updateUI() {
@@ -536,9 +528,8 @@ function updateUI() {
     state.phase === "over" ? "🏆 Partida encerrada" :
     "⚽ Prepare-se para a cobrança";
 
-  for (const id of ["trackA", "trackB"]) {
-    $(id).innerHTML = "";
-  }
+  $("trackA").replaceChildren();
+  $("trackB").replaceChildren();
 
   state.history.forEach((history, index) => {
     const container = index === 0 ? $("trackA") : $("trackB");
@@ -586,25 +577,26 @@ function startGame() {
   let b = $("teamB").value;
 
   if (a === b) {
-    const other = Object.keys(TEAMS).find(key => key !== a);
-    b = other || "ar";
+    b = Object.keys(TEAMS).find(key => key !== a);
     $("teamB").value = b;
   }
 
-  state.teams = [a, b];
   state.running = true;
   state.phase = "aim";
   state.turn = 0;
   state.shots = [0, 0];
   state.scores = [0, 0];
   state.history = [[], []];
-  state.message = "⚽ Primeira cobrança!";
-  state.detail = `${TEAMS[a].name} começa cobrando.`;
-  state.target = { x: 450, y: 205, dir: 0 };
+  state.teams = [a, b];
+  state.target = { x: 450, y: 205, dir: 0, keeperRead: 0 };
   state.ball = { x: 450, y: 420, z: 0 };
   state.keeper = { x: 450, y: 245, destX: 450 };
   state.particles = [];
   state.cpuScheduled = false;
+  state.shotStart = 0;
+
+  state.message = "⚽ Primeira cobrança!";
+  state.detail = `${TEAMS[a].name} começa cobrando.`;
 
   updateUI();
   playTone(520, .12);
@@ -613,29 +605,37 @@ function startGame() {
 function kick(dir) {
   if (!state.running || state.phase !== "aim" || cpuTurn()) return;
 
-  const difficulty = $("difficulty").value;
-  let targetDir = dir;
+  let keeperRead = dir;
 
-  // A dificuldade altera a precisão do goleiro do computador.
+  // O goleiro do computador erra a leitura com frequência ajustada.
   if ($("mode").value === "cpu") {
     const random = Math.random();
-    if (difficulty === "easy" && random < .18) targetDir = (dir + 1) % 3 - 1;
-    if (difficulty === "normal" && random < .30) targetDir = Math.random() < .5 ? -1 : 1;
-    if (difficulty === "hard" && random < .48) targetDir = Math.random() < .5 ? -1 : 1;
+    const difficulty = $("difficulty").value;
+    const missChance =
+      difficulty === "easy" ? .18 :
+      difficulty === "normal" ? .30 : .42;
+
+    if (random < missChance) {
+      const alternatives = [-1, 0, 1].filter(d => d !== dir);
+      keeperRead = alternatives[
+        Math.floor(Math.random() * alternatives.length)
+      ];
+    }
   }
 
   state.target = {
     x: xForDirection(dir),
     y: yForDirection(dir),
     dir,
-    keeperRead: targetDir
+    keeperRead
   };
 
-  state.keeper.destX = xForDirection(targetDir);
+  state.keeper.destX = xForDirection(keeperRead);
   state.phase = "flight";
   state.shotStart = performance.now();
   state.message = "⚡ Chute em andamento!";
   state.detail = "A bola está indo em direção ao gol.";
+
   playTone(170, .16, "triangle", .06);
   updateUI();
 }
@@ -644,19 +644,36 @@ function save(dir) {
   if (!state.running || state.phase !== "save") return;
 
   state.keeper.destX = xForDirection(dir);
-  state.phase = "flight";
   state.target.keeperRead = dir;
+  state.phase = "flight";
   state.shotStart = performance.now();
   state.message = "🧤 O goleiro está saltando!";
   state.detail = "Veja se ele consegue alcançar a bola.";
+
   playTone(280, .12, "triangle", .05);
   updateUI();
 }
 
+function burst(x, y, color) {
+  for (let i = 0; i < 28; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 60 + Math.random() * 190;
+
+    state.particles.push({
+      x,
+      y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: .6 + Math.random() * .7,
+      maxLife: 1.3,
+      color,
+      size: 2 + Math.random() * 3
+    });
+  }
+}
+
 function resolveShot() {
-  const shotDir = state.target.dir;
-  const keeperDir = state.target.keeperRead;
-  const scored = shotDir !== keeperDir;
+  const scored = state.target.dir !== state.target.keeperRead;
 
   if (scored) {
     state.scores[state.turn]++;
@@ -677,50 +694,6 @@ function resolveShot() {
   updateUI();
 }
 
-function nextShot() {
-  if (state.phase !== "result") return;
-
-  const totalA = state.shots[0];
-  const totalB = state.shots[1];
-  const scoreA = state.scores[0];
-  const scoreB = state.scores[1];
-
-  // Verifica se alguém já venceu durante as cinco cobranças.
-  if (totalA >= 5 && totalB >= 5 && scoreA !== scoreB) {
-    finishGame();
-    return;
-  }
-
-  if (totalA >= 5 && totalB >= 5 && scoreA === scoreB &&
-      totalA === totalB && totalA % 2 === 1) {
-    // A morte súbita continua até uma equipe marcar e a outra não.
-  }
-
-  state.turn = state.turn === 0 ? 1 : 0;
-
-  // Depois das cinco cobranças, uma equipe só vence quando
-  // ambas tiverem cobrado o mesmo número de vezes nessa rodada.
-  if (state.shots[0] >= 5 && state.shots[1] >= 5 &&
-      state.shots[0] === state.shots[1] &&
-      state.scores[0] !== state.scores[1]) {
-    finishGame();
-    return;
-  }
-
-  state.phase = "aim";
-  state.ball = { x: 450, y: 420, z: 0 };
-  state.keeper = { x: 450, y: 245, destX: 450 };
-  state.target = { x: 450, y: 205, dir: 0 };
-  state.cpuScheduled = false;
-
-  state.message = `⚽ Vez de ${team().name}`;
-  state.detail = state.shots[0] >= 5 && state.shots[1] >= 5
-    ? "Morte súbita: quem errar pode perder!"
-    : `Cobrança ${state.shots[state.turn] + 1} de 5.`;
-
-  updateUI();
-}
-
 function finishGame() {
   state.phase = "over";
   state.running = false;
@@ -733,41 +706,53 @@ function finishGame() {
     state.message = "🏆 Empate!";
   }
 
-  state.detail = `Resultado final: ${state.scores[0]} × ${state.scores[1]}`;
+  state.detail =
+    `Resultado final: ${state.scores[0]} × ${state.scores[1]}`;
+
   updateUI();
 }
 
-function burst(x, y, color) {
-  for (let i = 0; i < 28; i++) {
-    const a = Math.random() * Math.PI * 2;
-    const speed = 60 + Math.random() * 190;
+function nextShot() {
+  if (state.phase !== "result") return;
 
-    state.particles.push({
-      x,
-      y,
-      vx: Math.cos(a) * speed,
-      vy: Math.sin(a) * speed,
-      life: .6 + Math.random() * .7,
-      maxLife: 1.3,
-      color,
-      size: 2 + Math.random() * 3
-    });
+  const a = state.shots[0];
+  const b = state.shots[1];
+
+  // Depois das cinco cobranças regulares, termina quando ambos
+  // cobraram a mesma quantidade e o placar está diferente.
+  if (a >= 5 && b >= 5 && a === b &&
+      state.scores[0] !== state.scores[1]) {
+    finishGame();
+    return;
   }
-}
 
-function rect(x, y, w, h, color) {
-  ctx.fillStyle = color;
-  ctx.fillRect(x, y, w, h);
+  // Alterna a equipe que cobra.
+  state.turn = state.turn === 0 ? 1 : 0;
+
+  state.phase = "aim";
+  state.ball = { x: 450, y: 420, z: 0 };
+  state.keeper = { x: 450, y: 245, destX: 450 };
+  state.target = { x: 450, y: 205, dir: 0, keeperRead: 0 };
+  state.cpuScheduled = false;
+
+  state.message = `⚽ Vez de ${team().name}`;
+  state.detail =
+    state.shots[0] >= 5 && state.shots[1] >= 5
+      ? "Morte súbita: quem errar pode perder!"
+      : `Cobrança ${state.shots[state.turn] + 1} de 5.`;
+
+  updateUI();
 }
 
 function drawStadium() {
   const sky = ctx.createLinearGradient(0, 0, 0, 190);
   sky.addColorStop(0, "#10192e");
   sky.addColorStop(1, "#657b8d");
-  rect(0, 0, W, H, sky);
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, H);
 
-  // Torcida.
-  rect(0, 65, W, 105, "#24374c");
+  ctx.fillStyle = "#24374c";
+  ctx.fillRect(0, 65, W, 105);
 
   const colors = ["#d7b86b", "#e4eaf0", "#3c6685", "#ba5353", "#27364a"];
 
@@ -778,34 +763,25 @@ function drawStadium() {
       ctx.arc(
         i * 8.2,
         72 + row * 15 + Math.sin(state.anim * 3 + i) * 1.5,
-        3,
-        0,
-        Math.PI * 2
+        3, 0, Math.PI * 2
       );
       ctx.fill();
     }
   }
 
-  rect(0, 170, W, 14, "#a5b9c5");
+  ctx.fillStyle = "#a5b9c5";
+  ctx.fillRect(0, 170, W, 14);
 
-  // O gramado ocupa a parte inferior do campo.
-  const FIELD_TOP = 184;
-  rect(0, FIELD_TOP, W, H - FIELD_TOP, "#278443");
+  ctx.fillStyle = "#278443";
+  ctx.fillRect(0, 184, W, H - 184);
 
   for (let i = 0; i < 7; i++) {
-    rect(
-      0,
-      FIELD_TOP + i * 53,
-      W,
-      26,
-      i % 2 ? "#31994c" : "#278141"
-    );
+    ctx.fillStyle = i % 2 ? "#31994c" : "#278141";
+    ctx.fillRect(0, 184 + i * 53, W, 26);
   }
 
-  // Marcações do campo.
   ctx.strokeStyle = "#edf8ed";
   ctx.lineWidth = 2.5;
-
   ctx.beginPath();
   ctx.moveTo(0, 260);
   ctx.lineTo(W, 260);
@@ -813,54 +789,41 @@ function drawStadium() {
   ctx.lineTo(W, 510);
   ctx.stroke();
 
-  // Área grande: conectada visualmente à linha de fundo.
   ctx.strokeRect(150, 260, 600, 160);
 }
 
 function drawGoal() {
-  /*
-    A base da baliza fica na linha de fundo,
-    em y = 260, que também é a linha de referência do campo.
-  */
-
-  const gx = 230;
-  const gy = 155;
-  const gw = 440;
-  const gh = 105;
+  const gx = 230, gy = 155, gw = 440, gh = 105;
   const goalLineY = gy + gh;
 
-  // Parte traseira da rede.
-  rect(gx, gy, gw, gh, "#182536");
-  rect(gx + 8, gy + 8, gw - 16, gh - 8, "#26394a");
+  ctx.fillStyle = "#182536";
+  ctx.fillRect(gx, gy, gw, gh);
 
-  // Malha vertical.
+  ctx.fillStyle = "#26394a";
+  ctx.fillRect(gx + 8, gy + 8, gw - 16, gh - 8);
+
   ctx.strokeStyle = "#8ea5b6";
   ctx.lineWidth = 1;
 
   for (let i = 0; i <= 30; i++) {
     const px = gx + 8 + i * ((gw - 16) / 30);
-
     ctx.beginPath();
     ctx.moveTo(px, gy + 8);
     ctx.lineTo(px, goalLineY);
     ctx.stroke();
   }
 
-  // Malha horizontal.
   for (let i = 0; i <= 7; i++) {
     const py = gy + 8 + i * ((gh - 8) / 7);
-
     ctx.beginPath();
     ctx.moveTo(gx + 8, py);
     ctx.lineTo(gx + gw - 8, py);
     ctx.stroke();
   }
 
-  // Postes e travessão.
   ctx.strokeStyle = "#ffffff";
   ctx.lineWidth = 8;
   ctx.lineJoin = "round";
-
   ctx.beginPath();
   ctx.moveTo(gx, goalLineY);
   ctx.lineTo(gx, gy);
@@ -868,7 +831,6 @@ function drawGoal() {
   ctx.lineTo(gx + gw, goalLineY);
   ctx.stroke();
 
-  // Linha de fundo.
   ctx.strokeStyle = "#ffffff";
   ctx.lineWidth = 3;
   ctx.beginPath();
@@ -876,7 +838,6 @@ function drawGoal() {
   ctx.lineTo(W, goalLineY);
   ctx.stroke();
 
-  // Área pequena à frente do gol.
   ctx.lineWidth = 2;
   ctx.strokeRect(330, goalLineY, 240, 65);
 }
@@ -892,7 +853,6 @@ function drawPlayer(px, py, shirt, shorts, goalie = false) {
 
   const movement = Math.sin(state.anim * 8) * 2.5;
 
-  // Pernas.
   ctx.strokeStyle = "#d5a17c";
   ctx.lineWidth = 6;
   ctx.beginPath();
@@ -911,7 +871,6 @@ function drawPlayer(px, py, shirt, shorts, goalie = false) {
   ctx.lineTo(12 - movement, 0);
   ctx.stroke();
 
-  // Braços.
   ctx.strokeStyle = "#d5a17c";
   ctx.lineWidth = 7;
   ctx.beginPath();
@@ -921,9 +880,11 @@ function drawPlayer(px, py, shirt, shorts, goalie = false) {
   ctx.lineTo(19, -31);
   ctx.stroke();
 
-  // Uniforme.
-  rect(-13, -54, 26, 27, shirt);
-  rect(-13, -29, 26, 12, shorts);
+  ctx.fillStyle = shirt;
+  ctx.fillRect(-13, -54, 26, 27);
+
+  ctx.fillStyle = shorts;
+  ctx.fillRect(-13, -29, 26, 12);
 
   if (goalie) {
     ctx.fillStyle = "#f3dc52";
@@ -933,7 +894,6 @@ function drawPlayer(px, py, shirt, shorts, goalie = false) {
     ctx.fill();
   }
 
-  // Cabeça.
   ctx.fillStyle = "#d5a17c";
   ctx.beginPath();
   ctx.arc(0, -63, 10, 0, Math.PI * 2);
@@ -952,7 +912,6 @@ function drawBall() {
   ctx.translate(state.ball.x, state.ball.y - state.ball.z);
   ctx.rotate(state.anim * 5);
 
-  // Sombra projetada no gramado.
   ctx.fillStyle = "#10251a66";
   ctx.beginPath();
   ctx.ellipse(0, state.ball.z + 8, 10, 4, 0, 0, Math.PI * 2);
@@ -1030,28 +989,26 @@ function drawOverlay() {
   ctx.fillText("Clique em NOVA PARTIDA para jogar novamente", 450, 355);
 }
 
-function draw(dt) {
+function draw() {
   ctx.clearRect(0, 0, W, H);
 
   drawStadium();
   drawGoal();
 
-  // Goleiro à frente da rede e dentro da baliza.
-  const keeperDiveOffset = state.phase === "flight"
+  const diveOffset = state.phase === "flight"
     ? -Math.min(18, Math.abs(state.keeper.destX - 450) * 0.08)
     : 0;
 
   drawPlayer(
     state.keeper.x,
-    state.keeper.y + keeperDiveOffset,
+    state.keeper.y + diveOffset,
     "#26394f",
     "#3b4d61",
     true
   );
 
-  // Cobrador.
-  const t = team();
-  drawPlayer(450, 430, t.shirt, t.shorts);
+  const currentTeam = team();
+  drawPlayer(450, 430, currentTeam.shirt, currentTeam.shorts);
 
   drawAim();
   drawBall();
@@ -1084,12 +1041,14 @@ function update(dt, now) {
       }
     }
 
-    if (state.phase === "result" && now - state.shotStart > 1200) {
+    if (state.phase === "result" &&
+        now - state.shotStart > 1200) {
       nextShot();
     }
 
-    // Preparação do chute do computador.
-    if (cpuTurn() && state.phase === "aim" && !state.cpuScheduled) {
+    // O computador prepara e chuta em apenas 0,35 segundo.
+    if (cpuTurn() && state.phase === "aim" &&
+        !state.cpuScheduled) {
       state.cpuScheduled = true;
       state.phase = "cpu-prepare";
       state.shotStart = now;
@@ -1099,16 +1058,18 @@ function update(dt, now) {
     }
 
     if (cpuTurn() && state.phase === "cpu-prepare" &&
-        now - state.shotStart > 800) {
+        now - state.shotStart >= 350) {
       const dir = cpuKickDirection();
 
       state.target = {
         x: xForDirection(dir),
         y: yForDirection(dir),
-        dir
+        dir,
+        keeperRead: 0
       };
 
       state.phase = "save";
+      state.shotStart = now;
       state.message = "🤖 O computador chutou!";
       state.detail = "Escolha onde o goleiro deve pular.";
       updateUI();
@@ -1134,11 +1095,10 @@ function loop(now) {
 
   if (!document.hidden) update(dt, now);
 
-  draw(dt);
+  draw();
   requestAnimationFrame(loop);
 }
 
-// Eventos dos botões.
 document.querySelectorAll("[data-shoot]").forEach(button => {
   button.addEventListener("click", () => {
     kick(Number(button.dataset.shoot));
@@ -1155,7 +1115,8 @@ $("startBtn").addEventListener("click", startGame);
 
 $("soundBtn").addEventListener("click", () => {
   state.sound = !state.sound;
-  $("soundBtn").textContent = state.sound ? "🔊 SOM: ON" : "🔇 SOM: OFF";
+  $("soundBtn").textContent =
+    state.sound ? "🔊 SOM: ON" : "🔇 SOM: OFF";
 
   if (state.sound) playTone(600, .08, "sine", .04);
 });
@@ -1163,6 +1124,8 @@ $("soundBtn").addEventListener("click", () => {
 $("mode").addEventListener("change", () => {
   $("difficultyField").style.opacity =
     $("mode").value === "cpu" ? "1" : ".45";
+
+  if (state.running) startGame();
 });
 
 document.addEventListener("visibilitychange", () => {
