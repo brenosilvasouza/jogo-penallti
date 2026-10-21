@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#071321">
-<title>Penalty Legends | Brasil x Argentina</title>
+<title>Penalty Legends | Disputa de Seleções</title>
 
 <style>
 :root {
@@ -106,9 +106,7 @@ button.secondary {
   border: 1px solid #405770;
 }
 
-button.green {
-  background: #39d98a;
-}
+button.green { background: #39d98a; }
 
 button:hover:not(:disabled) {
   filter: brightness(1.1);
@@ -310,6 +308,20 @@ canvas {
     <select id="teamA">
       <option value="br">🇧🇷 Brasil</option>
       <option value="ar">🇦🇷 Argentina</option>
+      <option value="pt">🇵🇹 Portugal</option>
+      <option value="es">🇪🇸 Espanha</option>
+      <option value="fr">🇫🇷 França</option>
+      <option value="de">🇩🇪 Alemanha</option>
+      <option value="it">🇮🇹 Itália</option>
+      <option value="gb">🏴 Inglaterra</option>
+      <option value="nl">🇳🇱 Holanda</option>
+      <option value="uy">🇺🇾 Uruguai</option>
+      <option value="co">🇨🇴 Colômbia</option>
+      <option value="mx">🇲🇽 México</option>
+      <option value="jp">🇯🇵 Japão</option>
+      <option value="us">🇺🇸 Estados Unidos</option>
+      <option value="ma">🇲🇦 Marrocos</option>
+      <option value="hr">🇭🇷 Croácia</option>
     </select>
   </div>
 
@@ -318,6 +330,20 @@ canvas {
     <select id="teamB">
       <option value="ar">🇦🇷 Argentina</option>
       <option value="br">🇧🇷 Brasil</option>
+      <option value="pt">🇵🇹 Portugal</option>
+      <option value="es">🇪🇸 Espanha</option>
+      <option value="fr">🇫🇷 França</option>
+      <option value="de">🇩🇪 Alemanha</option>
+      <option value="it">🇮🇹 Itália</option>
+      <option value="gb">🏴 Inglaterra</option>
+      <option value="nl">🇳🇱 Holanda</option>
+      <option value="uy">🇺🇾 Uruguai</option>
+      <option value="co">🇨🇴 Colômbia</option>
+      <option value="mx">🇲🇽 México</option>
+      <option value="jp">🇯🇵 Japão</option>
+      <option value="us">🇺🇸 Estados Unidos</option>
+      <option value="ma">🇲🇦 Marrocos</option>
+      <option value="hr">🇭🇷 Croácia</option>
     </select>
   </div>
 
@@ -428,156 +454,130 @@ const TEAMS = {
     shirt: "#f5d927",
     shorts: "#168345"
   },
-  ar: {
-    name: "ARGENTINA",
-    flag: "🇦🇷",
-    shirt: "#83d8f4",
-    shorts: "#f5f5f5"
-  }
+  ar: { name: "ARGENTINA", flag: "🇦🇷", shirt: "#83d8f4", shorts: "#f5f5f5" },
+  pt: { name: "PORTUGAL", flag: "🇵🇹", shirt: "#d91f35", shorts: "#176b43" },
+  es: { name: "ESPANHA", flag: "🇪🇸", shirt: "#e63932", shorts: "#f2c230" },
+  fr: { name: "FRANÇA", flag: "🇫🇷", shirt: "#2455a4", shorts: "#f5f5f5" },
+  de: { name: "ALEMANHA", flag: "🇩🇪", shirt: "#222222", shorts: "#e8c83d" },
+  it: { name: "ITÁLIA", flag: "🇮🇹", shirt: "#2188d2", shorts: "#f5f5f5" },
+  gb: { name: "INGLATERRA", flag: "🏴", shirt: "#f4f4f4", shorts: "#2455a4" },
+  nl: { name: "HOLANDA", flag: "🇳🇱", shirt: "#f47721", shorts: "#243b65" },
+  uy: { name: "URUGUAI", flag: "🇺🇾", shirt: "#8bd5f5", shorts: "#222222" },
+  co: { name: "COLÔMBIA", flag: "🇨🇴", shirt: "#f4d229", shorts: "#2455a4" },
+  mx: { name: "MÉXICO", flag: "🇲🇽", shirt: "#16834b", shorts: "#f4f4f4" },
+  jp: { name: "JAPÃO", flag: "🇯🇵", shirt: "#f5f5f5", shorts: "#252525" },
+  us: { name: "ESTADOS UNIDOS", flag: "🇺🇸", shirt: "#d83b48", shorts: "#2455a4" },
+  ma: { name: "MARROCOS", flag: "🇲🇦", shirt: "#d52b3f", shorts: "#176b43" },
+  hr: { name: "CROÁCIA", flag: "🇭🇷", shirt: "#f5f5f5", shorts: "#d52b3f" }
 };
 
 const state = {
   running: false,
-  mode: "cpu",
-  difficulty: "normal",
-  teams: ["br", "ar"],
-  scores: [0, 0],
-  shots: [[], []],
-  shooter: 0,
+  sound: true,
   phase: "idle",
+  turn: 0,
+  shots: [0, 0],
+  scores: [0, 0],
+  history: [[], []],
+  teams: ["br", "ar"],
+  target: { x: 450, y: 205, dir: 0 },
+  ball: { x: 450, y: 420, z: 0 },
+  keeper: { x: 450, y: 245, destX: 450 },
   message: "Escolha os times e comece!",
   detail: "Cinco cobranças para cada equipe.",
-  target: { x: 450, y: 105, dir: 0 },
-  ball: { x: 450, y: 405, z: 0 },
-  keeper: { x: 450, y: 145, destX: 450, dive: 0 },
-  particles: [],
   anim: 0,
-  previous: 0,
   shotStart: 0,
+  previous: 0,
   cpuScheduled: false,
-  sound: true,
-  audio: null,
-  history: [],
-  cpuKickDir: 0
+  particles: [],
+  power: 1
 };
 
-function team() {
-  return TEAMS[state.teams[state.shooter]];
+function team(index = state.turn) {
+  return TEAMS[state.teams[index]] || TEAMS.br;
 }
 
 function cpuTurn() {
-  return state.mode === "cpu" && state.shooter === 1;
+  return $("mode").value === "cpu" && state.turn === 1;
 }
 
-function playTone(freq, duration, type = "sine", volume = .05, delay = 0) {
-  if (!state.sound) return;
-
-  try {
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
-
-    if (!state.audio) state.audio = new AC();
-
-    const ac = state.audio;
-    if (ac.state === "suspended") ac.resume();
-
-    const osc = ac.createOscillator();
-    const gain = ac.createGain();
-
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, ac.currentTime + delay);
-    gain.gain.setValueAtTime(.0001, ac.currentTime + delay);
-    gain.gain.exponentialRampToValueAtTime(
-      volume, ac.currentTime + delay + .015
-    );
-    gain.gain.exponentialRampToValueAtTime(
-      .0001, ac.currentTime + delay + duration
-    );
-
-    osc.connect(gain);
-    gain.connect(ac.destination);
-    osc.start(ac.currentTime + delay);
-    osc.stop(ac.currentTime + delay + duration + .03);
-  } catch {}
+function xForDirection(dir) {
+  return 310 + (dir + 1) * 140;
 }
 
-function soundKick() {
-  playTone(125, .13, "triangle", .12);
-  playTone(72, .1, "sine", .06, .025);
-}
-
-function soundGoal() {
-  playTone(523, .22, "triangle", .07);
-  playTone(659, .24, "triangle", .07, .13);
-  playTone(784, .38, "triangle", .08, .26);
-}
-
-function soundSave() {
-  playTone(170, .12, "triangle", .08);
-  playTone(95, .18, "sine", .08, .05);
+function yForDirection(dir) {
+  return dir === 0 ? 205 : 220;
 }
 
 function updateUI() {
+  const a = TEAMS[$("teamA").value] || TEAMS.br;
+  const b = TEAMS[$("teamB").value] || TEAMS.ar;
+
+  $("flagA").textContent = a.flag;
+  $("flagB").textContent = b.flag;
+  $("nameA").textContent = a.name;
+  $("nameB").textContent = b.name;
+  $("trackNameA").textContent = a.name;
+  $("trackNameB").textContent = b.name;
   $("scoreA").textContent = state.scores[0];
   $("scoreB").textContent = state.scores[1];
-
-  $("flagA").textContent = TEAMS[state.teams[0]].flag;
-  $("flagB").textContent = TEAMS[state.teams[1]].flag;
-  $("nameA").textContent = TEAMS[state.teams[0]].name;
-  $("nameB").textContent = TEAMS[state.teams[1]].name;
-  $("trackNameA").textContent = TEAMS[state.teams[0]].name;
-  $("trackNameB").textContent = TEAMS[state.teams[1]].name;
-
   $("status").textContent = state.message;
   $("substatus").textContent = state.detail;
 
-  const canShoot = state.running && state.phase === "aim" && !cpuTurn();
-  const canSave = state.running && state.phase === "save";
+  $("shootControls").style.display =
+    state.phase === "aim" && !cpuTurn() ? "grid" : "none";
 
-  document.querySelectorAll("[data-shoot]").forEach(button => {
-    button.disabled = !canShoot;
+  $("saveControls").style.display =
+    state.phase === "save" ? "grid" : "none";
+
+  $("actionTitle").textContent =
+    state.phase === "save" ? "🧤 Escolha onde defender" :
+    state.phase === "aim" ? "🎯 Escolha a direção do chute" :
+    state.phase === "over" ? "🏆 Partida encerrada" :
+    "⚽ Prepare-se para a cobrança";
+
+  for (const id of ["trackA", "trackB"]) {
+    $(id).innerHTML = "";
+  }
+
+  state.history.forEach((history, index) => {
+    const container = index === 0 ? $("trackA") : $("trackB");
+
+    history.forEach(result => {
+      const dot = document.createElement("div");
+      dot.className = "dot " + (result ? "goal" : "miss");
+      dot.textContent = result ? "✓" : "×";
+      container.appendChild(dot);
+    });
   });
-
-  document.querySelectorAll("[data-save]").forEach(button => {
-    button.disabled = !canSave;
-  });
-
-  $("actionTitle").textContent = !state.running
-    ? "🎯 Inicie uma partida para jogar"
-    : state.phase === "aim"
-      ? `⚽ ${team().name}: escolha onde chutar`
-      : state.phase === "save"
-        ? "🧤 Escolha onde defender"
-        : state.phase === "flight"
-          ? "⚡ A bola está a caminho!"
-          : state.phase === "result"
-            ? "⏱️ Preparando a próxima cobrança..."
-            : "🏆 Fim de jogo";
-
-  renderTracks();
 }
 
-function renderTracks() {
-  for (let t = 0; t < 2; t++) {
-    const el = $("track" + (t === 0 ? "A" : "B"));
-    el.replaceChildren();
+function playTone(freq = 440, duration = .12, type = "sine", volume = .04) {
+  if (!state.sound) return;
 
-    const count = Math.max(5, state.shots[t].length);
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
 
-    for (let i = 0; i < count; i++) {
-      const dot = document.createElement("span");
-      dot.className = "dot";
+    const audio = new AudioContextClass();
+    const oscillator = audio.createOscillator();
+    const gain = audio.createGain();
 
-      if (i < state.shots[t].length) {
-        const goal = state.shots[t][i];
-        dot.classList.add(goal ? "goal" : "miss");
-        dot.textContent = goal ? "✓" : "×";
-      } else {
-        dot.textContent = String(i + 1);
-      }
+    oscillator.type = type;
+    oscillator.frequency.value = freq;
+    gain.gain.value = volume;
+    oscillator.connect(gain);
+    gain.connect(audio.destination);
 
-      el.appendChild(dot);
-    }
+    oscillator.start();
+    gain.gain.exponentialRampToValueAtTime(
+      .001,
+      audio.currentTime + duration
+    );
+    oscillator.stop(audio.currentTime + duration);
+    oscillator.onended = () => audio.close();
+  } catch (error) {
+    console.warn("Áudio indisponível:", error);
   }
 }
 
@@ -586,226 +586,165 @@ function startGame() {
   let b = $("teamB").value;
 
   if (a === b) {
-    b = a === "br" ? "ar" : "br";
+    const other = Object.keys(TEAMS).find(key => key !== a);
+    b = other || "ar";
     $("teamB").value = b;
   }
 
   state.teams = [a, b];
-  state.mode = $("mode").value;
-  state.difficulty = $("difficulty").value;
-  state.scores = [0, 0];
-  state.shots = [[], []];
-  state.shooter = 0;
   state.running = true;
   state.phase = "aim";
-  state.target = { x: 450, y: 220, dir: 0 };
+  state.turn = 0;
+  state.shots = [0, 0];
+  state.scores = [0, 0];
+  state.history = [[], []];
+  state.message = "⚽ Primeira cobrança!";
+  state.detail = `${TEAMS[a].name} começa cobrando.`;
+  state.target = { x: 450, y: 205, dir: 0 };
   state.ball = { x: 450, y: 420, z: 0 };
-  state.keeper = { x: 450, y: 210, destX: 450, dive: 0 };
+  state.keeper = { x: 450, y: 245, destX: 450 };
   state.particles = [];
-  state.history = [];
   state.cpuScheduled = false;
 
-  state.message = `${TEAMS[a].name}: sua vez de cobrar!`;
-  state.detail = "Escolha um canto do gol.";
-
   updateUI();
-}
-
-function xForDirection(dir) {
-  return dir < 0 ? 320 : dir > 0 ? 580 : 450;
-}
-
-function yForDirection(dir) {
-  return dir === 0 ? 230 : 195;
-}
-
-function cpuKickDirection() {
-  const r = Math.random();
-
-  if (state.difficulty === "easy") {
-    return r < .48 ? 0 : r < .74 ? -1 : 1;
-  }
-
-  if (state.difficulty === "hard" && state.history.length) {
-    const recent = state.history.slice(-4);
-    const counts = [-1, 0, 1].map(d =>
-      recent.filter(v => v === d).length
-    );
-
-    const max = Math.max(...counts);
-    const options = [-1, 0, 1].filter((_, i) => counts[i] === max);
-
-    if (max > 0 && Math.random() < .65) {
-      return options[Math.floor(Math.random() * options.length)];
-    }
-  }
-
-  return r < .25 ? 0 : r < .625 ? -1 : 1;
-}
-
-function cpuSaveDirection() {
-  if (state.difficulty === "easy") {
-    return Math.floor(Math.random() * 3) - 1;
-  }
-
-  if (state.history.length && Math.random() < (
-    state.difficulty === "hard" ? .68 : .4
-  )) {
-    const recent = state.history.slice(-4);
-    const counts = [-1, 0, 1].map(d =>
-      recent.filter(v => v === d).length
-    );
-    const max = Math.max(...counts);
-    const options = [-1, 0, 1].filter((_, i) => counts[i] === max);
-
-    if (max > 0) {
-      return options[Math.floor(Math.random() * options.length)];
-    }
-  }
-
-  return Math.floor(Math.random() * 3) - 1;
+  playTone(520, .12);
 }
 
 function kick(dir) {
   if (!state.running || state.phase !== "aim" || cpuTurn()) return;
 
+  const difficulty = $("difficulty").value;
+  let targetDir = dir;
+
+  // A dificuldade altera a precisão do goleiro do computador.
+  if ($("mode").value === "cpu") {
+    const random = Math.random();
+    if (difficulty === "easy" && random < .18) targetDir = (dir + 1) % 3 - 1;
+    if (difficulty === "normal" && random < .30) targetDir = Math.random() < .5 ? -1 : 1;
+    if (difficulty === "hard" && random < .48) targetDir = Math.random() < .5 ? -1 : 1;
+  }
+
   state.target = {
     x: xForDirection(dir),
     y: yForDirection(dir),
-    dir
+    dir,
+    keeperRead: targetDir
   };
 
-  state.history.push(dir);
-
-  if (state.mode === "pvp") {
-    state.phase = "save";
-    state.message = `${TEAMS[state.teams[1 - state.shooter]].name}: escolha a defesa!`;
-    state.detail = "O cobrador escolheu o canto.";
-    updateUI();
-  } else {
-    beginFlight(cpuSaveDirection());
-  }
+  state.keeper.destX = xForDirection(targetDir);
+  state.phase = "flight";
+  state.shotStart = performance.now();
+  state.message = "⚡ Chute em andamento!";
+  state.detail = "A bola está indo em direção ao gol.";
+  playTone(170, .16, "triangle", .06);
+  updateUI();
 }
 
 function save(dir) {
   if (!state.running || state.phase !== "save") return;
-  beginFlight(dir);
-}
 
-function beginFlight(keeperDir) {
+  state.keeper.destX = xForDirection(dir);
   state.phase = "flight";
+  state.target.keeperRead = dir;
   state.shotStart = performance.now();
-  state.ball = { x: 450, y: 420, z: 0 };
-  state.keeper.destX = xForDirection(keeperDir);
-  state.keeper.dive = keeperDir;
-
-  state.message = "CHUTE! ⚡";
-  state.detail = "A bola está indo em direção ao gol.";
-
-  soundKick();
+  state.message = "🧤 O goleiro está saltando!";
+  state.detail = "Veja se ele consegue alcançar a bola.";
+  playTone(280, .12, "triangle", .05);
   updateUI();
 }
 
 function resolveShot() {
-  if (!state.running || state.phase !== "flight") return;
+  const shotDir = state.target.dir;
+  const keeperDir = state.target.keeperRead;
+  const scored = shotDir !== keeperDir;
 
-  const goal = state.target.dir !== state.keeper.dive;
-
-  if (goal) {
-    state.scores[state.shooter]++;
-    state.message = "GOOOOOOL! ⚽";
+  if (scored) {
+    state.scores[state.turn]++;
+    state.message = "⚽ GOOOOOL!";
     state.detail = `${team().name} marcou!`;
-    burst(state.target.x, state.target.y, "#ffdc65", 38);
-    soundGoal();
+    burst(state.target.x, state.target.y, "#ffdc65");
+    playTone(760, .3, "sine", .06);
   } else {
-    state.message = "DEFESAÇA! 🧤";
-    state.detail = "O goleiro acertou o canto.";
-    burst(state.keeper.x, state.keeper.y, "#70dcff", 28);
-    soundSave();
+    state.message = "🧤 DEFESA DO GOLEIRO!";
+    state.detail = "A cobrança foi defendida!";
+    burst(state.target.x, state.target.y, "#d8f2ff");
+    playTone(120, .25, "sawtooth", .05);
   }
 
-  state.shots[state.shooter].push(goal);
+  state.history[state.turn].push(scored);
+  state.shots[state.turn]++;
   state.phase = "result";
-  state.shotStart = performance.now();
-
-  updateUI();
-
-  if (checkWinner()) return;
-}
-
-function checkWinner() {
-  const a = state.shots[0].length;
-  const b = state.shots[1].length;
-  const sa = state.scores[0];
-  const sb = state.scores[1];
-
-  if (a < 5 || b < 5) {
-    const remainingA = Math.max(0, 5 - a);
-    const remainingB = Math.max(0, 5 - b);
-
-    if (sa > sb + remainingB) {
-      finish(0);
-      return true;
-    }
-
-    if (sb > sa + remainingA) {
-      finish(1);
-      return true;
-    }
-  }
-
-  if (a >= 5 && b >= 5 && a === b && sa !== sb) {
-    finish(sa > sb ? 0 : 1);
-    return true;
-  }
-
-  return false;
-}
-
-function finish(winner) {
-  state.running = false;
-  state.phase = "over";
-  state.message = `🏆 ${TEAMS[state.teams[winner]].name} É CAMPEÃO!`;
-  state.detail = `Placar final: ${state.scores[0]} × ${state.scores[1]}`;
-
-  burst(450, 205, "#ffdc65", 90);
-  soundGoal();
   updateUI();
 }
 
 function nextShot() {
-  if (!state.running) return;
+  if (state.phase !== "result") return;
 
-  state.shooter = state.shots[0].length <= state.shots[1].length
-    ? 0 : 1;
+  const totalA = state.shots[0];
+  const totalB = state.shots[1];
+  const scoreA = state.scores[0];
+  const scoreB = state.scores[1];
+
+  // Verifica se alguém já venceu durante as cinco cobranças.
+  if (totalA >= 5 && totalB >= 5 && scoreA !== scoreB) {
+    finishGame();
+    return;
+  }
+
+  if (totalA >= 5 && totalB >= 5 && scoreA === scoreB &&
+      totalA === totalB && totalA % 2 === 1) {
+    // A morte súbita continua até uma equipe marcar e a outra não.
+  }
+
+  state.turn = state.turn === 0 ? 1 : 0;
+
+  // Depois das cinco cobranças, uma equipe só vence quando
+  // ambas tiverem cobrado o mesmo número de vezes nessa rodada.
+  if (state.shots[0] >= 5 && state.shots[1] >= 5 &&
+      state.shots[0] === state.shots[1] &&
+      state.scores[0] !== state.scores[1]) {
+    finishGame();
+    return;
+  }
 
   state.phase = "aim";
-  state.target = { x: 450, y: 220, dir: 0 };
   state.ball = { x: 450, y: 420, z: 0 };
-  state.keeper = { x: 450, y: 210, destX: 450, dive: 0 };
+  state.keeper = { x: 450, y: 245, destX: 450 };
+  state.target = { x: 450, y: 205, dir: 0 };
   state.cpuScheduled = false;
 
-  const n = state.shots[state.shooter].length;
-
-  if (n >= 5) {
-    state.message = `MORTE SÚBITA — ${team().name}`;
-    state.detail = "Uma cobrança para cada equipe nesta rodada.";
-  } else {
-    state.message = `${team().name}: sua vez!`;
-    state.detail = `Cobrança ${n + 1} de 5.`;
-  }
+  state.message = `⚽ Vez de ${team().name}`;
+  state.detail = state.shots[0] >= 5 && state.shots[1] >= 5
+    ? "Morte súbita: quem errar pode perder!"
+    : `Cobrança ${state.shots[state.turn] + 1} de 5.`;
 
   updateUI();
 }
 
-function burst(px, py, color, amount = 25) {
-  for (let i = 0; i < amount; i++) {
+function finishGame() {
+  state.phase = "over";
+  state.running = false;
+
+  if (state.scores[0] > state.scores[1]) {
+    state.message = `🏆 ${TEAMS[state.teams[0]].name} venceu!`;
+  } else if (state.scores[1] > state.scores[0]) {
+    state.message = `🏆 ${TEAMS[state.teams[1]].name} venceu!`;
+  } else {
+    state.message = "🏆 Empate!";
+  }
+
+  state.detail = `Resultado final: ${state.scores[0]} × ${state.scores[1]}`;
+  updateUI();
+}
+
+function burst(x, y, color) {
+  for (let i = 0; i < 28; i++) {
     const a = Math.random() * Math.PI * 2;
     const speed = 60 + Math.random() * 190;
 
     state.particles.push({
-      x: px,
-      y: py,
+      x,
+      y,
       vx: Math.cos(a) * speed,
       vy: Math.sin(a) * speed,
       life: .6 + Math.random() * .7,
@@ -880,19 +819,15 @@ function drawStadium() {
 
 function drawGoal() {
   /*
-    CORREÇÃO DO GOL:
-    A base da baliza fica exatamente na linha de fundo,
+    A base da baliza fica na linha de fundo,
     em y = 260, que também é a linha de referência do campo.
-
-    A rede fica acima dessa linha, na perspectiva do desenho.
-    Desenhamos a rede depois do gramado para que permaneça visível.
   */
 
   const gx = 230;
   const gy = 155;
   const gw = 440;
   const gh = 105;
-  const goalLineY = gy + gh; // 260
+  const goalLineY = gy + gh;
 
   // Parte traseira da rede.
   rect(gx, gy, gw, gh, "#182536");
@@ -933,7 +868,7 @@ function drawGoal() {
   ctx.lineTo(gx + gw, goalLineY);
   ctx.stroke();
 
-  // Linha de fundo: mesma coordenada da base dos postes.
+  // Linha de fundo.
   ctx.strokeStyle = "#ffffff";
   ctx.lineWidth = 3;
   ctx.beginPath();
@@ -941,7 +876,7 @@ function drawGoal() {
   ctx.lineTo(W, goalLineY);
   ctx.stroke();
 
-  // Área pequena à frente do gol, ligada à linha de fundo.
+  // Área pequena à frente do gol.
   ctx.lineWidth = 2;
   ctx.strokeRect(330, goalLineY, 240, 65);
 }
@@ -1098,15 +1033,17 @@ function drawOverlay() {
 function draw(dt) {
   ctx.clearRect(0, 0, W, H);
 
-  // Ordem importante: primeiro o estádio e o gramado,
-  // depois o gol, para manter a rede visível sobre o campo.
   drawStadium();
   drawGoal();
 
-  // Goleiro à frente da rede.
+  // Goleiro à frente da rede e dentro da baliza.
+  const keeperDiveOffset = state.phase === "flight"
+    ? -Math.min(18, Math.abs(state.keeper.destX - 450) * 0.08)
+    : 0;
+
   drawPlayer(
     state.keeper.x,
-    state.keeper.y,
+    state.keeper.y + keeperDiveOffset,
     "#26394f",
     "#3b4d61",
     true
