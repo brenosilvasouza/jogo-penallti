@@ -2,523 +2,1369 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#071321">
 <title>Penalty Legends | Brasil x Argentina</title>
+
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#071321;color:white;font-family:Arial,sans-serif;text-align:center;padding:16px}
-h1{font-size:clamp(25px,5vw,42px);font-style:italic;margin:8px}
-h1 span{color:#ffd45c}
-.menu{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin:18px}
-select,button{padding:12px;border:0;border-radius:9px;font-weight:bold;cursor:pointer}
-select{background:#182b42;color:white}
-button{background:#ffd45c;color:#142238}
-button:hover{filter:brightness(1.12)}
-button:disabled{opacity:.45;cursor:not-allowed}
-.score{font-size:38px;font-weight:900;margin:10px}
-#status{color:#ffd45c;font-weight:bold;min-height:24px}
-.arena{width:min(900px,100%);margin:auto;position:relative;overflow:hidden;border:3px solid #32465d;border-radius:14px}
-canvas{width:100%;height:auto;display:block;touch-action:manipulation}
-.help{color:#a9bdd2;font-size:13px;line-height:1.8;margin:15px}
+:root {
+  --bg: #071321;
+  --panel: #101f32;
+  --panel2: #172a40;
+  --gold: #ffd45c;
+  --green: #39d98a;
+  --muted: #a9bdd2;
+  --border: #30465e;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 20px 14px 35px;
+  color: #fff;
+  background:
+    radial-gradient(ellipse at 50% 0%, #193a52 0%, transparent 55%),
+    var(--bg);
+  font-family: Arial, Helvetica, sans-serif;
+  text-align: center;
+}
+
+button, select { font: inherit; }
+
+header { margin: 4px auto 22px; }
+
+h1 {
+  margin: 0;
+  font-size: clamp(27px, 5vw, 46px);
+  font-weight: 1000;
+  font-style: italic;
+  letter-spacing: -1.5px;
+}
+
+h1 span { color: var(--gold); }
+
+.subtitle {
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 3px;
+}
+
+.panel {
+  width: min(960px, 100%);
+  margin: 0 auto 15px;
+  padding: 15px;
+  background: rgba(16,31,50,.94);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 12px 30px #0002;
+}
+
+.settings {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: end;
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 7px;
+  text-align: left;
+}
+
+.field label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+select {
+  min-height: 43px;
+  padding: 10px 12px;
+  color: white;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  outline: none;
+}
+
+button {
+  min-height: 44px;
+  padding: 11px 15px;
+  color: #142238;
+  background: var(--gold);
+  border: 0;
+  border-radius: 10px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform .15s, filter .15s;
+  touch-action: manipulation;
+}
+
+button:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+button:active:not(:disabled) { transform: scale(.97); }
+
+button:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+button.secondary {
+  color: #fff;
+  background: #263b53;
+  border: 1px solid #3b526a;
+}
+
+button.green {
+  color: #061c13;
+  background: var(--green);
+}
+
+button.red {
+  color: white;
+  background: #c74955;
+}
+
+.scoreboard {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  width: min(700px, 100%);
+  margin: 15px auto;
+  padding: 14px;
+  background: linear-gradient(135deg, #12243a, #0c192a);
+  border: 1px solid var(--border);
+  border-radius: 15px;
+}
+
+.team { min-width: 0; }
+
+.flag {
+  display: block;
+  font-size: 33px;
+  margin-bottom: 5px;
+}
+
+.team-name {
+  font-size: clamp(11px, 2vw, 15px);
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.goals {
+  margin-top: 5px;
+  color: var(--gold);
+  font-size: 38px;
+  font-weight: 1000;
+  font-variant-numeric: tabular-nums;
+}
+
+.score-separator {
+  color: #72869b;
+  font-size: 23px;
+  font-weight: 900;
+}
+
+.status {
+  min-height: 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  margin: 12px auto;
+  font-weight: 900;
+}
+
+#status {
+  color: var(--gold);
+  font-size: clamp(15px, 3vw, 20px);
+}
+
+#substatus {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.arena {
+  position: relative;
+  width: min(960px, 100%);
+  margin: 0 auto;
+  overflow: hidden;
+  border: 2px solid #45617b;
+  border-radius: 15px;
+  background: #163b2b;
+  box-shadow: 0 18px 45px #0005;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 900 / 550;
+  touch-action: manipulation;
+}
+
+.kicker {
+  margin: 15px auto 9px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.controls button {
+  min-height: 54px;
+  padding: 9px 5px;
+  font-size: clamp(11px, 2vw, 14px);
+}
+
+.controls button span {
+  display: block;
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: normal;
+  opacity: .8;
+}
+
+.action-panel {
+  width: min(960px, 100%);
+  margin: 15px auto;
+  padding: 15px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 15px;
+}
+
+.action-title {
+  margin: 0 0 12px;
+  font-size: 14px;
+}
+
+.shot-track {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.track-team {
+  padding: 11px;
+  background: #0a1726;
+  border-radius: 10px;
+  text-align: left;
+}
+
+.track-label {
+  margin-bottom: 9px;
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--muted);
+}
+
+.shot-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dot {
+  display: grid;
+  place-items: center;
+  width: 23px;
+  height: 23px;
+  color: white;
+  background: #26394e;
+  border: 1px solid #42556a;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.dot.goal {
+  background: #168653;
+  border-color: #39d98a;
+}
+
+.dot.miss {
+  background: #a83342;
+  border-color: #e95e6a;
+}
+
+.dot.current {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.help {
+  width: min(850px, 100%);
+  margin: 22px auto 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.9;
+}
+
+.help strong { color: #fff; }
+
+.footer {
+  margin-top: 22px;
+  color: #71869c;
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+
+@media (max-width: 520px) {
+  body { padding: 15px 9px 25px; }
+  .panel { padding: 11px; }
+  .settings { display: grid; grid-template-columns: 1fr 1fr; }
+  .field { min-width: 0; }
+  .field select { width: 100%; font-size: 12px; }
+  #startBtn { width: 100%; grid-column: 1 / -1; }
+  .scoreboard { padding: 10px 5px; gap: 4px; }
+  .goals { font-size: 33px; }
+  .flag { font-size: 28px; }
+  .controls { gap: 6px; }
+  .controls button { min-height: 56px; }
+  .shot-track { gap: 8px; }
+  .track-team { padding: 8px 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+  }
+}
 </style>
 </head>
+
 <body>
-<h1>⚽ PENALTY <span>LEGENDS</span></h1>
+<header>
+  <h1>⚽ PENALTY <span>LEGENDS</span></h1>
+  <div class="subtitle">A DISPUTA COMEÇA AQUI</div>
+</header>
 
-<div class="menu">
-<select id="teamA" aria-label="Time A">
-<option value="br">🇧🇷 Brasil</option>
-<option value="ar">🇦🇷 Argentina</option>
-</select>
-<select id="teamB" aria-label="Time B">
-<option value="ar">🇦🇷 Argentina</option>
-<option value="br">🇧🇷 Brasil</option>
-</select>
-<select id="mode" aria-label="Modo de jogo">
-<option value="cpu">1 jogador vs computador</option>
-<option value="pvp">2 jogadores</option>
-</select>
-<button onclick="start()">▶ JOGAR</button>
-</div>
+<section class="panel settings">
+  <div class="field">
+    <label for="teamA">TIME 1</label>
+    <select id="teamA">
+      <option value="br">🇧🇷 Brasil</option>
+      <option value="ar">🇦🇷 Argentina</option>
+    </select>
+  </div>
 
-<div class="score">
-<span id="a">0</span> <small>×</small> <span id="b">0</span>
+  <div class="field">
+    <label for="teamB">TIME 2</label>
+    <select id="teamB">
+      <option value="ar">🇦🇷 Argentina</option>
+      <option value="br">🇧🇷 Brasil</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label for="mode">MODO</label>
+    <select id="mode">
+      <option value="cpu">1 jogador vs computador</option>
+      <option value="pvp">2 jogadores</option>
+    </select>
+  </div>
+
+  <div class="field" id="difficultyField">
+    <label for="difficulty">DIFICULDADE</label>
+    <select id="difficulty">
+      <option value="easy">Fácil</option>
+      <option value="normal" selected>Normal</option>
+      <option value="hard">Difícil</option>
+    </select>
+  </div>
+
+  <button id="startBtn" class="green">▶ NOVA PARTIDA</button>
+  <button id="soundBtn" class="secondary" aria-pressed="true">🔊 SOM: ON</button>
+</section>
+
+<section class="scoreboard" aria-label="Placar">
+  <div class="team">
+    <span class="flag" id="flagA">🇧🇷</span>
+    <div class="team-name" id="nameA">BRASIL</div>
+    <div class="goals" id="scoreA">0</div>
+  </div>
+
+  <div class="score-separator">×</div>
+
+  <div class="team">
+    <span class="flag" id="flagB">🇦🇷</span>
+    <div class="team-name" id="nameB">ARGENTINA</div>
+    <div class="goals" id="scoreB">0</div>
+  </div>
+</section>
+
+<div class="status" aria-live="polite">
+  <div id="status">Escolha os times e comece!</div>
+  <div id="substatus">Cinco cobranças para cada equipe.</div>
 </div>
-<div id="status">Escolha os times e comece a partida!</div>
 
 <div class="arena">
-<canvas id="c" width="900" height="550"></canvas>
+  <canvas id="game" width="900" height="550"
+    role="img" aria-label="Campo de futebol com goleiro e cobrador">
+  </canvas>
 </div>
 
-<div class="menu">
-<button onclick="kick(-1)">↖ Canto esquerdo</button>
-<button onclick="kick(0)">↑ Centro</button>
-<button onclick="kick(1)">↗ Canto direito</button>
-<button onclick="save(-1)">🧤 Defender esquerda</button>
-<button onclick="save(0)">🧤 Defender centro</button>
-<button onclick="save(1)">🧤 Defender direita</button>
-</div>
+<section class="action-panel">
+  <h2 class="action-title" id="actionTitle">🎯 Escolha a direção</h2>
+
+  <div class="controls" id="shootControls">
+    <button data-shoot="-1">↖ ESQUERDA<span>Canto esquerdo</span></button>
+    <button data-shoot="0">⬆ CENTRO<span>Meio do gol</span></button>
+    <button data-shoot="1">↗ DIREITA<span>Canto direito</span></button>
+  </div>
+
+  <div class="controls" id="saveControls">
+    <button class="secondary" data-save="-1">🧤 ESQUERDA<span>Pular à esquerda</span></button>
+    <button class="secondary" data-save="0">🧤 CENTRO<span>Ficar no meio</span></button>
+    <button class="secondary" data-save="1">🧤 DIREITA<span>Pular à direita</span></button>
+  </div>
+</section>
+
+<section class="action-panel">
+  <h2 class="action-title">📊 HISTÓRICO DAS COBRANÇAS</h2>
+  <div class="shot-track">
+    <div class="track-team">
+      <div class="track-label" id="trackNameA">BRASIL</div>
+      <div class="shot-dots" id="trackA"></div>
+    </div>
+    <div class="track-team">
+      <div class="track-label" id="trackNameB">ARGENTINA</div>
+      <div class="shot-dots" id="trackB"></div>
+    </div>
+  </div>
+</section>
 
 <div class="help">
-<strong>Como jogar:</strong> escolha um canto para chutar ou defender.<br>
-No modo de dois jogadores, um jogador chuta e o outro escolhe a defesa.<br>
-Cada equipe tem cinco cobranças. Se houver empate, a disputa continua em morte súbita.
+  <strong>COMO JOGAR</strong><br>
+  Escolha os times e clique em NOVA PARTIDA.<br>
+  No modo contra o computador, você controla o Time 1.
+  Quando o computador chutar, escolha onde o goleiro deve defender.<br>
+  No modo de dois jogadores, um cobra o pênalti e o outro escolhe a defesa.<br>
+  Cada equipe tem cinco cobranças. Se houver empate, começa a morte súbita.<br>
+  Os sons são gerados pelo próprio navegador.
 </div>
 
-<script>
-const c=document.getElementById('c');
-const x=c.getContext('2d');
-const W=900,H=550;
-const $=id=>document.getElementById(id);
+<div class="footer">PENALTY LEGENDS • FOOTBALL CHALLENGE</div>
 
-const teams={
- br:{name:'BRASIL',flag:'🇧🇷',shirt:'#ffdf24',short:'#168342'},
- ar:{name:'ARGENTINA',flag:'🇦🇷',shirt:'#83d9f5',short:'#f8f8f8'}
+<script>
+(() => {
+"use strict";
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+const $ = id => document.getElementById(id);
+
+const W = 900;
+const H = 550;
+
+const TEAMS = {
+  br: {
+    name: "BRASIL",
+    flag: "🇧🇷",
+    shirt: "#f5d927",
+    shorts: "#168345",
+    trim: "#178345"
+  },
+  ar: {
+    name: "ARGENTINA",
+    flag: "🇦🇷",
+    shirt: "#83d8f4",
+    shorts: "#f5f5f5",
+    trim: "#5ab9dc"
+  }
 };
 
-let score=[0,0];
-let shots=[[],[]];
-let shooter=0,mode='cpu';
-let running=false,phase='idle';
-let ball={x:450,y:400,z:0};
-let keeper={x:450,y:125,destX:450};
-let target={x:450,y:100,dir:0};
-let particles=[],anim=0,lastShot=0;
-let teamsNow=['br','ar'];
-let message='Escolha os times e comece!';
-let previous=0;
-let cpuScheduled=false;
+const state = {
+  running: false,
+  mode: "cpu",
+  difficulty: "normal",
+  teams: ["br", "ar"],
+  scores: [0, 0],
+  shots: [[], []],
+  shooter: 0,
+  phase: "idle",
+  message: "Escolha os times e comece!",
+  detail: "Cinco cobranças para cada equipe.",
+  target: { x: 450, y: 105, dir: 0 },
+  ball: { x: 450, y: 405, z: 0 },
+  keeper: { x: 450, y: 145, destX: 450, dive: 0 },
+  particles: [],
+  anim: 0,
+  previous: 0,
+  shotStart: 0,
+  shotDuration: 720,
+  cpuScheduled: false,
+  sound: true,
+  audio: null,
+  lastAim: [0, 0],
+  lastResult: null,
+  celebration: 0
+};
 
-function start(){
- teamsNow=[$('teamA').value,$('teamB').value];
-
- if(teamsNow[0]===teamsNow[1]){
-  teamsNow[1]=teamsNow[0]==='br'?'ar':'br';
-  $('teamB').value=teamsNow[1];
- }
-
- mode=$('mode').value;
- score=[0,0];
- shots=[[],[]];
- shooter=0;
- running=true;
- phase='aim';
- ball={x:450,y:400,z:0};
- keeper={x:450,y:125,destX:450};
- target={x:450,y:100,dir:0};
- particles=[];
- cpuScheduled=false;
- message='Sua vez! Escolha onde chutar.';
- updateUI();
+function currentTeam() {
+  return TEAMS[state.teams[state.shooter]];
 }
 
-function updateUI(){
- $('a').textContent=score[0];
- $('b').textContent=score[1];
-
- let text=teams[teamsNow[shooter]].name+' — '+message;
- if(phase==='over')text=message;
-
- $('status').textContent=text;
-
- const waitingForShot=running&&phase==='aim';
- const waitingForSave=running&&phase==='save';
-
- document.querySelectorAll('.menu button').forEach((button,i)=>{
-  if(i===0) return;
-  if(i<=3) button.disabled=!waitingForShot ||
-   (mode==='cpu'&&shooter===1);
-  else button.disabled=!waitingForSave;
- });
+function isCpuTurn() {
+  return state.mode === "cpu" && state.shooter === 1;
 }
 
-function kick(dir){
- if(!running||phase!=='aim')return;
- if(mode==='cpu'&&shooter===1)return;
+function audioContext() {
+  if (!state.sound) return null;
 
- setTarget(dir);
+  try {
+    if (!state.audio) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return null;
+      state.audio = new AudioCtx();
+    }
 
- if(mode==='pvp'){
-  phase='save';
-  message='Defensor: escolha para onde pular!';
+    if (state.audio.state === "suspended") {
+      state.audio.resume();
+    }
+
+    return state.audio;
+  } catch {
+    return null;
+  }
+}
+
+function tone(freq, duration, type = "sine", volume = 0.05, delay = 0) {
+  const ac = audioContext();
+  if (!ac) return;
+
+  try {
+    const oscillator = ac.createOscillator();
+    const gain = ac.createGain();
+
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(freq, ac.currentTime + delay);
+
+    gain.gain.setValueAtTime(0.0001, ac.currentTime + delay);
+    gain.gain.exponentialRampToValueAtTime(
+      volume, ac.currentTime + delay + 0.015
+    );
+    gain.gain.exponentialRampToValueAtTime(
+      0.0001, ac.currentTime + delay + duration
+    );
+
+    oscillator.connect(gain);
+    gain.connect(ac.destination);
+
+    oscillator.start(ac.currentTime + delay);
+    oscillator.stop(ac.currentTime + delay + duration + 0.03);
+  } catch {}
+}
+
+function playKick() {
+  tone(125, 0.13, "triangle", 0.13);
+  tone(72, 0.10, "sine", 0.06, 0.025);
+}
+
+function playSave() {
+  tone(170, 0.12, "triangle", 0.08);
+  tone(95, 0.18, "sine", 0.08, 0.05);
+}
+
+function playGoal() {
+  tone(523, 0.22, "triangle", 0.07);
+  tone(659, 0.24, "triangle", 0.07, 0.13);
+  tone(784, 0.38, "triangle", 0.08, 0.26);
+}
+
+function playMiss() {
+  tone(240, 0.16, "sine", 0.06);
+  tone(175, 0.25, "sine", 0.06, 0.13);
+}
+
+function setMessage(main, detail = "") {
+  state.message = main;
+  state.detail = detail;
   updateUI();
- }else{
-  // O goleiro do computador escolhe sua defesa.
-  const cpuSave=Math.floor(Math.random()*3)-1;
-  beginFlight(cpuSave);
- }
 }
 
-function save(dir){
- if(!running||phase!=='save')return;
- beginFlight(dir);
-}
+function updateUI() {
+  $("scoreA").textContent = state.scores[0];
+  $("scoreB").textContent = state.scores[1];
 
-function setTarget(dir){
- target.dir=dir;
- target.x=dir<0?340:dir>0?560:450;
- target.y=dir===0?145:105;
-}
+  $("flagA").textContent = TEAMS[state.teams[0]].flag;
+  $("flagB").textContent = TEAMS[state.teams[1]].flag;
+  $("nameA").textContent = TEAMS[state.teams[0]].name;
+  $("nameB").textContent = TEAMS[state.teams[1]].name;
+  $("trackNameA").textContent = TEAMS[state.teams[0]].name;
+  $("trackNameB").textContent = TEAMS[state.teams[1]].name;
 
-function keeperPosition(dir){
- // Posições suficientemente afastadas para diferenciar
- // uma defesa correta de uma defesa no lado errado.
- return dir<0?250:dir>0?650:450;
-}
+  $("status").textContent = state.message;
+  $("substatus").textContent = state.detail;
 
-function beginFlight(keeperDir){
- if(!running)return;
+  const canShoot = state.running && state.phase === "aim" &&
+    !isCpuTurn();
 
- phase='flight';
- lastShot=performance.now();
- cpuScheduled=false;
+  const canSave = state.running && state.phase === "save" &&
+    !(state.mode === "cpu" && state.shooter === 0);
 
- ball={x:450,y:400,z:0};
- keeper.destX=keeperPosition(keeperDir);
-
- message='CHUTE! ⚡';
- updateUI();
-}
-
-function resolve(){
- // Impede que a mesma cobrança seja contabilizada duas vezes.
- if(!running||phase!=='flight')return;
-
- const saved=target.dir===
-  (keeper.destX<350?-1:keeper.destX>550?1:0);
-
- const goal=!saved;
-
- if(goal)score[shooter]++;
- shots[shooter].push(goal);
-
- message=goal?'GOOOOOOL! ⚽':'DEFESAÇA! 🧤';
-
- if(goal){
-  burst(target.x,target.y,'#ffdf60');
- }else{
-  burst(keeper.x,keeper.y,'#75dcff');
- }
-
- phase='result';
- lastShot=performance.now();
- updateUI();
-
- if(checkWinner())return;
-}
-
-function checkWinner(){
- const a=shots[0].length;
- const b=shots[1].length;
-
- // Encerramento antecipado quando a diferença é inalcançável.
- if(a<5||b<5){
-  const remainingA=Math.max(0,5-a);
-  const remainingB=Math.max(0,5-b);
-
-  if(score[0]>score[1]+remainingB){
-   finish(0);
-   return true;
-  }
-
-  if(score[1]>score[0]+remainingA){
-   finish(1);
-   return true;
-  }
- }
-
- // Após cinco cobranças, decidir somente quando ambos
- // tiverem executado o mesmo número de chutes.
- if(a>=5&&b>=5&&a===b&&score[0]!==score[1]){
-  finish(score[0]>score[1]?0:1);
-  return true;
- }
-
- return false;
-}
-
-function finish(winner){
- running=false;
- phase='over';
- message='🏆 VENCEDOR: '+teams[teamsNow[winner]].name+'!';
- burst(450,100,'#ffdf60');
- updateUI();
-}
-
-function next(){
- if(!running)return;
-
- // Alternância correta, inclusive durante a morte súbita.
- shooter=shots[0].length===shots[1].length?0:1;
-
- phase='aim';
- keeper={x:450,y:125,destX:450};
- ball={x:450,y:400,z:0};
- target={x:450,y:100,dir:0};
-
- message=mode==='cpu'&&shooter===1
-  ?'Computador preparando a cobrança...'
-  :'Escolha o canto do chute.';
-
- cpuScheduled=false;
- updateUI();
-}
-
-function burst(px,py,color){
- for(let i=0;i<25;i++){
-  const a=Math.random()*Math.PI*2;
-  const s=60+Math.random()*170;
-
-  particles.push({
-   x:px,y:py,
-   vx:Math.cos(a)*s,
-   vy:Math.sin(a)*s,
-   life:.5+Math.random()*.6,
-   color
+  document.querySelectorAll("[data-shoot]").forEach(button => {
+    button.disabled = !canShoot;
   });
- }
+
+  document.querySelectorAll("[data-save]").forEach(button => {
+    button.disabled = !canSave;
+  });
+
+  $("actionTitle").textContent = !state.running
+    ? "🎯 Inicie uma partida para jogar"
+    : state.phase === "aim"
+      ? `⚽ ${currentTeam().name}: escolha onde chutar`
+      : state.phase === "save"
+        ? "🧤 Defensor: escolha onde pular"
+        : state.phase === "flight"
+          ? "⚡ A bola está a caminho!"
+          : state.phase === "result"
+            ? "⏱️ Preparando a próxima cobrança..."
+            : "🏆 Fim de jogo";
+
+  renderTracks();
 }
 
-function rect(a,b,w,h,color){
- x.fillStyle=color;
- x.fillRect(a,b,w,h);
-}
+function renderTracks() {
+  for (let team = 0; team < 2; team++) {
+    const container = $("track" + (team === 0 ? "A" : "B"));
+    container.replaceChildren();
 
-function player(px,py,shirt,short,goalie=false){
- x.save();
- x.translate(px,py);
+    for (let i = 0; i < Math.max(5, state.shots[team].length); i++) {
+      const dot = document.createElement("span");
+      dot.className = "dot";
 
- x.fillStyle='#10261977';
- x.beginPath();
- x.ellipse(0,3,24,7,0,0,Math.PI*2);
- x.fill();
+      if (i < state.shots[team].length) {
+        const goal = state.shots[team][i];
+        dot.classList.add(goal ? "goal" : "miss");
+        dot.textContent = goal ? "✓" : "×";
+        dot.title = goal ? "Gol" : "Defesa";
+      } else {
+        dot.textContent = i + 1;
+        dot.title = `Cobrança ${i + 1}`;
+      }
 
- const movement=Math.sin(anim*8)*3;
-
- x.strokeStyle='#d5a17c';
- x.lineWidth=6;
- x.beginPath();
- x.moveTo(-7,-20);
- x.lineTo(-9+movement,-5);
- x.moveTo(7,-20);
- x.lineTo(9-movement,-5);
- x.stroke();
-
- x.strokeStyle=goalie?'#202c3c':'#f4f4f4';
- x.lineWidth=8;
- x.beginPath();
- x.moveTo(-9+movement,-5);
- x.lineTo(-12+movement,0);
- x.moveTo(9-movement,-5);
- x.lineTo(12-movement,0);
- x.stroke();
-
- x.strokeStyle='#d6a17b';
- x.lineWidth=7;
- x.beginPath();
- x.moveTo(-11,-49);
- x.lineTo(-19,-31);
- x.moveTo(11,-49);
- x.lineTo(19,-31);
- x.stroke();
-
- rect(-13,-54,26,27,shirt);
- rect(-13,-29,26,12,short);
-
- if(goalie){
-  x.fillStyle='#f3dc52';
-  x.beginPath();
-  x.arc(-19,-29,5,0,Math.PI*2);
-  x.arc(19,-29,5,0,Math.PI*2);
-  x.fill();
- }
-
- x.fillStyle='#d6a17b';
- x.beginPath();
- x.arc(0,-63,10,0,Math.PI*2);
- x.fill();
-
- x.fillStyle='#30251f';
- x.beginPath();
- x.arc(0,-67,10,Math.PI,Math.PI*2);
- x.fill();
-
- x.restore();
-}
-
-function draw(){
- x.clearRect(0,0,W,H);
-
- const sky=x.createLinearGradient(0,0,0,180);
- sky.addColorStop(0,'#101b30');
- sky.addColorStop(1,'#52687b');
- rect(0,0,W,H,sky);
-
- // Torcida
- for(let row=0;row<5;row++){
-  for(let i=0;i<100;i++){
-   x.fillStyle=['#d7b86b','#e4eaf0','#3c6685',
-    '#ba5353','#27364a'][(i+row*3)%5];
-   x.globalAlpha=.75;
-   x.beginPath();
-   x.arc(i*9,20+row*13,3,0,Math.PI*2);
-   x.fill();
+      container.appendChild(dot);
+    }
   }
- }
- x.globalAlpha=1;
-
- rect(0,83,W,30,'#667c8b');
- rect(0,113,W,437,'#3e9f40');
-
- for(let i=0;i<7;i++){
-  rect(0,113+i*63,W,31,i%2?'#49aa43':'#3e9c3e');
- }
-
- x.strokeStyle='#edfff0';
- x.lineWidth=3;
- x.beginPath();
- x.moveTo(0,188);x.lineTo(W,188);
- x.moveTo(0,500);x.lineTo(W,500);
- x.moveTo(150,188);x.lineTo(150,310);
- x.lineTo(750,310);x.lineTo(750,188);
- x.stroke();
-
- // Gol e rede
- rect(225,27,450,104,'#d9e4e8');
- rect(235,36,430,94,'#243447');
-
- x.strokeStyle='#b8cad3';
- x.lineWidth=1;
-
- for(let i=0;i<=30;i++){
-  x.beginPath();
-  x.moveTo(235+i*14.3,36);
-  x.lineTo(235+i*14.3,130);
-  x.stroke();
- }
-
- for(let i=0;i<8;i++){
-  x.beginPath();
-  x.moveTo(235,36+i*13);
-  x.lineTo(665,36+i*13);
-  x.stroke();
- }
-
- x.strokeStyle='#fff';
- x.lineWidth=8;
- x.strokeRect(235,28,430,103);
-
- player(keeper.x,keeper.y,'#25354a','#3b4b60',true);
-
- player(450,407,
-  teams[teamsNow[shooter]].shirt,
-  teams[teamsNow[shooter]].short);
-
- // Bola: a posição é atualizada exclusivamente no loop.
- x.save();
- x.translate(ball.x,ball.y-ball.z);
-
- x.fillStyle='#17251a66';
- x.beginPath();
- x.ellipse(0,ball.z+8,10,4,0,0,Math.PI*2);
- x.fill();
-
- x.fillStyle='#fff';
- x.beginPath();
- x.arc(0,0,9,0,Math.PI*2);
- x.fill();
-
- x.strokeStyle='#252d35';
- x.lineWidth=2;
- x.stroke();
-
- x.fillStyle='#252d35';
- for(let i=0;i<5;i++){
-  const a=i*Math.PI*2/5;
-  x.beginPath();
-  x.arc(Math.cos(a)*4,Math.sin(a)*4,2,0,Math.PI*2);
-  x.fill();
- }
-
- x.restore();
-
- if(phase==='aim'&&!(mode==='cpu'&&shooter===1)){
-  x.strokeStyle='#ffdc66';
-  x.lineWidth=3;
-  x.beginPath();
-  x.arc(target.x,target.y,14+Math.sin(anim*5)*3,
-   0,Math.PI*2);
-  x.stroke();
- }
-
- for(const p of particles){
-  x.globalAlpha=Math.max(0,p.life);
-  x.fillStyle=p.color;
-  x.beginPath();
-  x.arc(p.x,p.y,4,0,Math.PI*2);
-  x.fill();
- }
- x.globalAlpha=1;
 }
 
-function loop(now){
- const dt=previous?Math.min((now-previous)/1000,.035):0;
- previous=now;
- anim+=dt;
+function startGame() {
+  let a = $("teamA").value;
+  let b = $("teamB").value;
 
- if(running&&!document.hidden){
-  if(phase==='flight'){
-   const t=Math.min(1,(now-lastShot)/700);
-   const ease=t*t*(3-2*t);
-
-   ball.x=450+(target.x-450)*ease;
-   ball.y=400+(target.y-400)*ease;
-   ball.z=Math.sin(t*Math.PI)*100;
-
-   keeper.x+= (keeper.destX-keeper.x)*Math.min(1,dt*12);
-
-   if(t>=1){
-    ball.x=target.x;
-    ball.y=target.y;
-    ball.z=0;
-    keeper.x=keeper.destX;
-    resolve();
-   }
+  if (a === b) {
+    b = a === "br" ? "ar" : "br";
+    $("teamB").value = b;
   }
 
-  if(phase==='result'&&now-lastShot>1100){
-   next();
-  }
+  state.teams = [a, b];
+  state.mode = $("mode").value;
+  state.difficulty = $("difficulty").value;
+  state.scores = [0, 0];
+  state.shots = [[], []];
+  state.shooter = 0;
+  state.running = true;
+  state.phase = "aim";
+  state.ball = { x: 450, y: 405, z: 0 };
+  state.keeper = { x: 450, y: 145, destX: 450, dive: 0 };
+  state.target = { x: 450, y: 105, dir: 0 };
+  state.particles = [];
+  state.cpuScheduled = false;
+  state.lastResult = null;
+  state.celebration = 0;
 
-  // O computador escolhe apenas uma cobrança por turno.
-  if(mode==='cpu'&&shooter===1&&phase==='aim'&&!cpuScheduled){
-   cpuScheduled=true;
-   setTarget(Math.floor(Math.random()*3)-1);
-   phase='save';
-   message='Computador chutando! Escolha a defesa.';
-   updateUI();
-  }
- }
-
- for(const p of particles){
-  p.x+=p.vx*dt;
-  p.y+=p.vy*dt;
-  p.vy+=100*dt;
-  p.life-=dt;
- }
-
- particles=particles.filter(p=>p.life>0);
-
- draw();
- requestAnimationFrame(loop);
+  state.message = `${TEAMS[a].name}: sua vez de cobrar!`;
+  state.detail = "Escolha um canto do gol.";
+  updateUI();
 }
 
-document.addEventListener('visibilitychange',()=>{
- previous=0;
+function weightedDirection() {
+  const difficulty = state.difficulty;
+  const r = Math.random();
+
+  if (difficulty === "easy") {
+    return r < 0.48 ? 0 : r < 0.74 ? -1 : 1;
+  }
+
+  if (difficulty === "normal") {
+    return r < 0.26 ? 0 : r < 0.63 ? -1 : 1;
+  }
+
+  return r < 0.14 ? 0 : r < 0.57 ? -1 : 1;
+}
+
+function cpuKeeperDirection() {
+  const r = Math.random();
+
+  if (state.difficulty === "easy") {
+    return Math.floor(Math.random() * 3) - 1;
+  }
+
+  // Em dificuldades maiores, o goleiro aprende a observar
+  // as direções escolhidas anteriormente pelo jogador.
+  const history = state.lastAim.slice(0, 4);
+
+  if (history.length && r < (state.difficulty === "hard" ? 0.72 : 0.4)) {
+    const counts = [-1, 0, 1].map(dir =>
+      history.filter(item => item === dir).length
+    );
+
+    const max = Math.max(...counts);
+    const candidates = [-1, 0, 1].filter((_, i) => counts[i] === max);
+
+    if (max > 0) {
+      return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+  }
+
+  return Math.floor(Math.random() * 3) - 1;
+}
+
+function xForDirection(dir) {
+  return dir < 0 ? 315 : dir > 0 ? 585 : 450;
+}
+
+function yForDirection(dir) {
+  return dir === 0 ? 151 : 105;
+}
+
+function kick(dir) {
+  if (!state.running || state.phase !== "aim" || isCpuTurn()) return;
+
+  state.target = {
+    x: xForDirection(dir),
+    y: yForDirection(dir),
+    dir
+  };
+
+  state.lastAim.unshift(dir);
+  state.lastAim = state.lastAim.slice(0, 6);
+
+  if (state.mode === "pvp") {
+    state.phase = "save";
+    state.message = `${TEAMS[state.teams[1 - state.shooter]].name}: escolha a defesa!`;
+    state.detail = "O cobrador já escolheu o canto.";
+    updateUI();
+    return;
+  }
+
+  // No modo contra o computador, o computador controla o goleiro.
+  const keeperDir = cpuKeeperDirection();
+  beginFlight(keeperDir);
+}
+
+function save(dir) {
+  if (!state.running || state.phase !== "save") return;
+
+  if (state.mode === "cpu" && state.shooter === 1) {
+    // O computador chuta; o jogador controla o goleiro.
+    beginFlight(dir);
+    return;
+  }
+
+  if (state.mode === "pvp") {
+    beginFlight(dir);
+  }
+}
+
+function beginFlight(keeperDir) {
+  if (!state.running || !["aim", "save"].includes(state.phase)) return;
+
+  state.phase = "flight";
+  state.shotStart = performance.now();
+  state.shotDuration = 720;
+  state.cpuScheduled = false;
+
+  state.ball = { x: 450, y: 405, z: 0 };
+  state.keeper.destX = xForDirection(keeperDir);
+  state.keeper.dive = keeperDir;
+
+  state.message = "CHUTE! ⚡";
+  state.detail = "A bola está indo em direção ao gol!";
+
+  playKick();
+  updateUI();
+}
+
+function resolveShot() {
+  if (!state.running || state.phase !== "flight") return;
+
+  const shotDir = state.target.dir;
+  const keeperDir = state.keeper.dive;
+  const saved = shotDir === keeperDir;
+  const goal = !saved;
+
+  if (goal) {
+    state.scores[state.shooter]++;
+    state.message = "GOOOOOOL! ⚽";
+    state.detail = `${TEAMS[state.teams[state.shooter]].name} marcou!`;
+    state.celebration = 1.2;
+    burst(state.target.x, state.target.y, "#ffdc65", 38);
+    playGoal();
+  } else {
+    state.message = "DEFESAÇA! 🧤";
+    state.detail = "O goleiro acertou o canto!";
+    burst(state.keeper.x, 145, "#70dcff", 28);
+    playSave();
+  }
+
+  state.shots[state.shooter].push(goal);
+  state.lastResult = { team: state.shooter, goal };
+  state.phase = "result";
+  state.shotStart = performance.now();
+
+  updateUI();
+
+  if (checkWinner()) return;
+}
+
+function checkWinner() {
+  const a = state.shots[0].length;
+  const b = state.shots[1].length;
+  const sa = state.scores[0];
+  const sb = state.scores[1];
+
+  // Durante as cinco cobranças iniciais, uma equipe pode
+  // vencer antecipadamente se a outra não puder alcançá-la.
+  if (a < 5 || b < 5) {
+    const remainingA = Math.max(0, 5 - a);
+    const remainingB = Math.max(0, 5 - b);
+
+    if (sa > sb + remainingB) {
+      finish(0);
+      return true;
+    }
+
+    if (sb > sa + remainingA) {
+      finish(1);
+      return true;
+    }
+  }
+
+  // Depois das cinco cobranças, a morte súbita só termina
+  // quando ambas as equipes chutaram o mesmo número de vezes.
+  if (a >= 5 && b >= 5 && a === b && sa !== sb) {
+    finish(sa > sb ? 0 : 1);
+    return true;
+  }
+
+  return false;
+}
+
+function finish(winner) {
+  state.running = false;
+  state.phase = "over";
+  state.message = `🏆 ${TEAMS[state.teams[winner]].name} É CAMPEÃO!`;
+  state.detail = `Placar final: ${state.scores[0]} × ${state.scores[1]}`;
+  burst(450, 115, "#ffdc65", 100);
+  playGoal();
+  updateUI();
+}
+
+function nextShot() {
+  if (!state.running) return;
+
+  // O próximo cobrador é sempre a equipe com menos cobranças.
+  state.shooter = state.shots[0].length <= state.shots[1].length
+    ? 0 : 1;
+
+  state.phase = "aim";
+  state.target = { x: 450, y: 105, dir: 0 };
+  state.ball = { x: 450, y: 405, z: 0 };
+  state.keeper = { x: 450, y: 145, destX: 450, dive: 0 };
+  state.cpuScheduled = false;
+
+  const count = state.shots[state.shooter].length;
+
+  if (count >= 5) {
+    state.message = `MORTE SÚBITA — ${TEAMS[state.teams[state.shooter]].name}`;
+    state.detail = "Cada equipe precisa cobrar uma vez nesta rodada.";
+  } else {
+    state.message = `${TEAMS[state.teams[state.shooter]].name}: sua vez!`;
+    state.detail = `Cobrança ${count + 1} de 5.`;
+  }
+
+  updateUI();
+}
+
+function burst(px, py, color, amount = 24) {
+  for (let i = 0; i < amount; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 50 + Math.random() * 220;
+
+    state.particles.push({
+      x: px,
+      y: py,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 0.55 + Math.random() * 0.8,
+      maxLife: 1.35,
+      size: 2 + Math.random() * 4,
+      color
+    });
+  }
+}
+
+function rect(x, y, w, h, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, w, h);
+}
+
+function drawStadium() {
+  const sky = ctx.createLinearGradient(0, 0, 0, 190);
+  sky.addColorStop(0, "#10192e");
+  sky.addColorStop(0.6, "#334c69");
+  sky.addColorStop(1, "#8296a2");
+  rect(0, 0, W, H, sky);
+
+  // Refletores.
+  for (const side of [35, 865]) {
+    const glow = ctx.createRadialGradient(side, 22, 2, side, 22, 100);
+    glow.addColorStop(0, "#fff9d6bb");
+    glow.addColorStop(1, "#fff9d600");
+    rect(side - 100, 0, 200, 130, glow);
+
+    ctx.fillStyle = "#f6f3dd";
+    for (let i = -2; i <= 2; i++) {
+      ctx.beginPath();
+      ctx.arc(side + i * 12, 18, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Arquibancadas e torcida.
+  rect(0, 65, W, 115, "#23364c");
+
+  for (let row = 0; row < 7; row++) {
+    rect(0, 70 + row * 15, W, 2, "#516176");
+
+    for (let i = 0; i < 112; i++) {
+      const px = i * 8.2 + (row % 2) * 4;
+      const py = 72 + row * 15;
+      const colors = ["#f0ce71", "#e6eef4", "#4777a2", "#bd5b64", "#2aab74"];
+
+      ctx.fillStyle = colors[(i * 7 + row * 3) % colors.length];
+      ctx.beginPath();
+      ctx.arc(px, py + Math.sin(state.anim * 2 + i) * 1.2, 3.1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  rect(0, 177, W, 15, "#b2c4ce");
+
+  // Gramado com faixas.
+  rect(0, 192, W, H - 192, "#288443");
+
+  for (let i = 0; i < 7; i++) {
+    rect(0, 192 + i * 52, W, 26, i % 2 ? "#31994c" : "#278141");
+  }
+
+  // Marcações do campo.
+  ctx.strokeStyle = "#e8f5e9";
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(0, 220);
+  ctx.lineTo(W, 220);
+  ctx.moveTo(0, 510);
+  ctx.lineTo(W, 510);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(450, 510, 95, Math.PI, 0);
+  ctx.stroke();
+
+  ctx.strokeRect(150, 192, 600, 140);
+  ctx.strokeRect(280, 192, 340, 72);
+}
+
+function drawGoal() {
+  // Sombra atrás da rede.
+  rect(223, 24, 454, 113, "#182536");
+
+  ctx.fillStyle = "#dce9ef";
+  ctx.fillRect(230, 27, 440, 105);
+
+  rect(238, 35, 424, 91, "#26394a");
+
+  ctx.strokeStyle = "#718697";
+  ctx.lineWidth = 1;
+
+  for (let i = 0; i <= 30; i++) {
+    const px = 238 + i * (424 / 30);
+    ctx.beginPath();
+    ctx.moveTo(px, 35);
+    ctx.lineTo(px, 126);
+    ctx.stroke();
+  }
+
+  for (let i = 0; i <= 8; i++) {
+    const py = 35 + i * (91 / 8);
+    ctx.beginPath();
+    ctx.moveTo(238, py);
+    ctx.lineTo(662, py);
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle = "#fff";
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.moveTo(230, 129);
+  ctx.lineTo(230, 27);
+  ctx.lineTo(670, 27);
+  ctx.lineTo(670, 129);
+  ctx.stroke();
+
+  // Postes verticais da área.
+  ctx.strokeStyle = "#fff";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(280, 129, 340, 85);
+}
+
+function drawPlayer(px, py, shirt, shorts, goalie = false, dive = 0) {
+  ctx.save();
+  ctx.translate(px, py);
+
+  if (goalie && state.phase === "flight") {
+    ctx.rotate(dive * 0.12);
+  }
+
+  // Sombra.
+  ctx.fillStyle = "#0b201866";
+  ctx.beginPath();
+  ctx.ellipse(0, 2, 23, 7, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  const run = Math.sin(state.anim * 9) * 3;
+
+  // Pernas.
+  ctx.strokeStyle = "#d4a07b";
+  ctx.lineWidth = 6;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(-7, -20);
+  ctx.lineTo(-10 + run, -7);
+  ctx.moveTo(7, -20);
+  ctx.lineTo(10 - run, -7);
+  ctx.stroke();
+
+  ctx.strokeStyle = goalie ? "#263447" : "#f5f5f5";
+  ctx.lineWidth = 9;
+  ctx.beginPath();
+  ctx.moveTo(-10 + run, -7);
+  ctx.lineTo(-13 + run, 0);
+  ctx.moveTo(10 - run, -7);
+  ctx.lineTo(13 - run, 0);
+  ctx.stroke();
+
+  // Braços.
+  ctx.strokeStyle = shirt;
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.moveTo(-10, -49);
+  ctx.lineTo(-18, -32);
+  ctx.moveTo(10, -49);
+  ctx.lineTo(18, -32);
+  ctx.stroke();
+
+  ctx.strokeStyle = "#d4a07b";
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(-18, -32);
+  ctx.lineTo(-20, -28);
+  ctx.moveTo(18, -32);
+  ctx.lineTo(20, -28);
+  ctx.stroke();
+
+  // Camisa e calção.
+  rect(-13, -55, 26, 28, shirt);
+  rect(-13, -29, 26, 12, shorts);
+
+  // Detalhe da camisa.
+  rect(-2, -53, 4, 22, goalie ? "#f3dc52" : "#ffffff55");
+
+  if (goalie) {
+    ctx.fillStyle = "#f3dc52";
+    ctx.beginPath();
+    ctx.arc(-20, -28, 5, 0, Math.PI * 2);
+    ctx.arc(20, -28, 5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Cabeça e cabelo.
+  ctx.fillStyle = "#d4a07b";
+  ctx.beginPath();
+  ctx.arc(0, -64, 10, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#33251f";
+  ctx.beginPath();
+  ctx.arc(0, -68, 10, Math.PI, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawBall() {
+  const bx = state.ball.x;
+  const by = state.ball.y - state.ball.z;
+
+  ctx.save();
+  ctx.translate(bx, by);
+  ctx.rotate(state.anim * 5);
+
+  // Sombra no chão.
+  ctx.fillStyle = "#10251a66";
+  ctx.beginPath();
+  ctx.ellipse(0, state.ball.z + 8, 11, 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.arc(0, 0, 9, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "#263442";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  ctx.fillStyle = "#263442";
+  for (let i = 0; i < 5; i++) {
+    const angle = i * Math.PI * 2 / 5;
+    ctx.beginPath();
+    ctx.arc(Math.cos(angle) * 4, Math.sin(angle) * 4, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+function drawAim() {
+  if (state.phase !== "aim" || isCpuTurn()) return;
+
+  const px = state.target.x;
+  const py = state.target.y;
+  const pulse = 15 + Math.sin(state.anim * 5) * 3;
+
+  ctx.save();
+  ctx.strokeStyle = "#ffdc65";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(px, py, pulse, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.fillStyle = "#ffdc6555";
+  ctx.beginPath();
+  ctx.arc(px, py, 7, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawParticles(dt) {
+  for (const p of state.particles) {
+    ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawOverlay() {
+  if (state.phase === "over") {
+    ctx.fillStyle = "#061321b9";
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#ffdc65";
+    ctx.font = "900 40px Arial";
+    ctx.fillText("FIM DE JOGO!", 450, 230);
+
+    ctx.fillStyle = "#fff";
+    ctx.font = "900 29px Arial";
+    ctx.fillText(`${state.scores[0]}  ×  ${state.scores[1]}`, 450, 280);
+
+    ctx.font = "bold 17px Arial";
+    ctx.fillText(state.message.replace("🏆 ", ""), 450, 325);
+
+    ctx.font = "14px Arial";
+    ctx.fillStyle = "#c6d5e4";
+    ctx.fillText("Clique em NOVA PARTIDA para jogar novamente", 450, 365);
+  }
+}
+
+function draw(dt) {
+  ctx.clearRect(0, 0, W, H);
+
+  drawStadium();
+  drawGoal();
+
+  // Goleiro.
+  drawPlayer(
+    state.keeper.x,
+    state.keeper.y,
+    "#26394f",
+    "#3b4d61",
+    true,
+    state.keeper.dive
+  );
+
+  // Cobrador.
+  const team = currentTeam();
+  drawPlayer(450, 420, team.shirt, team.shorts);
+
+  drawAim();
+  drawBall();
+  drawParticles(dt);
+  drawOverlay();
+}
+
+function update(dt, now) {
+  state.anim += dt;
+
+  if (state.running) {
+    if (state.phase === "flight") {
+      const t = Math.min(1, (now - state.shotStart) / state.shotDuration);
+      const ease = t * t * (3 - 2 * t);
+
+      state.ball.x = 450 + (state.target.x - 450) * ease;
+      state.ball.y = 405 + (state.target.y - 405) * ease;
+      state.ball.z = Math.sin(t * Math.PI) * 115;
+
+      state.keeper.x +=
+        (state.keeper.destX - state.keeper.x) * Math.min(1, dt * 11);
+
+      if (t >= 1) {
+        state.ball.x = state.target.x;
+        state.ball.y = state.target.y;
+        state.ball.z = 0;
+        state.keeper.x = state.keeper.destX;
+        resolveShot();
+      }
+    }
+
+    if (state.phase === "result" && now - state.shotStart > 1250) {
+      nextShot();
+    }
+
+    // O computador só prepara uma cobrança por turno.
+    if (isCpuTurn() && state.phase === "aim" && !state.cpuScheduled) {
+      state.cpuScheduled = true;
+      state.phase = "cpu-prepare";
+      state.shotStart = now;
+      state.message = "🤖 O computador está preparando o chute...";
+      state.detail = "Prepare-se para escolher a defesa.";
+      updateUI();
+    }
+
+    if (isCpuTurn() && state.phase === "cpu-prepare" &&
+        now - state.shotStart > 850) {
+      state.target = {
+        dir: weightedDirection(),
+        x: 450,
+        y: 105
+      };
+
+      state.target.x = xForDirection(state.target.dir);
+      state.target.y = yForDirection(state.target.dir);
+
+      state.phase = "save";
+      state.message = "🤖 O computador chutou!";
+      state.detail = "Escolha rapidamente onde defender.";
+      updateUI();
+    }
+  }
+
+  for (const p of state.particles) {
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.vy += 110 * dt;
+    p.life -= dt;
+  }
+
+  state.particles = state.particles.filter(p => p.life > 0);
+}
+
+function loop(now) {
+  const dt = state.previous
+    ? Math.min((now - state.previous) / 1000, 0.035)
+    : 0;
+
+  state.previous = now;
+
+  if (!document.hidden) {
+    update(dt, now);
+  }
+
+  draw(dt);
+  requestAnimationFrame(loop);
+}
+
+// Controles.
+document.querySelectorAll("[data-shoot]").forEach(button => {
+  button.addEventListener("click", () => {
+    kick(Number(button.dataset.shoot));
+  });
 });
+
+document.querySelectorAll("[data-save]").forEach(button => {
+  button.addEventListener("click", () => {
+    save(Number(button.dataset.save));
+  });
+});
+
+$("startBtn").addEventListener("click", startGame);
+
+$("soundBtn").addEventListener("click", () => {
+  state.sound = !state.sound;
+  $("soundBtn").textContent = state.sound ? "🔊 SOM: ON" : "🔇 SOM: OFF";
+  $("soundBtn").setAttribute("aria-pressed", String(state.sound));
+
+  if (state.sound) {
+    tone(600, 0.08, "sine", 0.04);
+  }
+});
+
+$("mode").addEventListener("change", () => {
+  $("difficultyField").style.opacity =
+    $("mode").value === "cpu" ? "1" : ".45";
+});
+
+// Reinicia o relógio de animação quando a aba volta a ficar visível.
+document.addEventListener("visibilitychange", () => {
+  state.previous = 0;
+});
+
+// Estado inicial.
+$("difficultyField").style.opacity =
+  $("mode").value === "cpu" ? "1" : ".45";
 
 updateUI();
 requestAnimationFrame(loop);
+})();
 </script>
 </body>
 </html>
