@@ -1,943 +1,3407 @@
-<!DOCTYPE html>
+
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Classic Flash Penalty Shootout 2D</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Duelo de Sombras - Jogo de Luta 2D</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,600;0,700;1,700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body { background: #111; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
-        #game-container { position: relative; width: 800px; height: 500px; background: #000; border: 4px solid #444; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-        canvas { width: 100%; height: 100%; display: block; }
-        .ui-panel { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); z-index: 10; }
-        .hidden { display: none !important; }
-        h1 { font-size: 36px; margin-bottom: 20px; color: #4CAF50; text-shadow: 0 0 10px rgba(76,175,80,0.5); text-transform: uppercase; letter-spacing: 2px; }
-        .btn { padding: 12px 30px; font-size: 18px; font-weight: bold; background: #4CAF50; color: #fff; border: none; border-radius: 25px; cursor: pointer; margin: 8px; transition: all 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); text-transform: uppercase; }
-        .btn:hover { background: #45a049; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.4); }
-        .btn:active { transform: translateY(0); }
-        .selection-box { display: flex; gap: 20px; margin-bottom: 25px; }
-        .player-select { display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border: 1px solid #333; }
-        .player-select h3 { margin-bottom: 10px; color: #ffeb3b; }
-        select { padding: 8px 15px; font-size: 16px; background: #222; color: #fff; border: 1px solid #555; border-radius: 5px; cursor: pointer; outline: none; }
-        #hud { position: absolute; top: 10px; left: 0; width: 100%; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; z-index: 5; }
-        .score-card { background: rgba(0,0,0,0.7); padding: 8px 15px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold; font-size: 16px; display: flex; align-items: center; gap: 10px; }
-        .dots { display: flex; gap: 5px; }
-        .dot { width: 12px; height: 12px; border-radius: 50%; background: #444; border: 1px solid #666; }
-        .dot.goal { background: #4CAF50; border-color: #81C784; box-shadow: 0 0 5px #4CAF50; }
-        .dot.miss { background: #F44336; border-color: #E57373; box-shadow: 0 0 5px #F44336; }
-        #controls-hint { position: absolute; bottom: 10px; width: 100%; text-align: center; font-size: 14px; color: rgba(255,255,255,0.7); pointer-events: none; text-shadow: 1px 1px 2px #000; z-index: 5; }
-        #power-meter-container { position: absolute; right: 20px; bottom: 50px; width: 20px; height: 150px; background: rgba(0,0,0,0.6); border: 2px solid #fff; border-radius: 10px; overflow: hidden; display: none; flex-direction: column-reverse; }
-        #power-meter-fill { width: 100%; height: 0%; background: linear-gradient(to top, #4CAF50, #FFEB3B, #F44336); }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background-color: #0b0e14;
+            color: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            overflow-x: hidden;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        header h1 {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: clamp(1.5rem, 3vw, 2.3rem);
+            font-weight: 700;
+            font-style: italic;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, #38bdf8, #f8fafc, #fb7185);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 4px 20px rgba(56, 189, 248, 0.25);
+        }
+
+        /* Container Principal da Arena */
+        .game-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 1024px;
+            aspect-ratio: 16 / 9;
+            background: #111622;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75), 0 0 0 2px rgba(255, 255, 255, 0.08);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* HUD Superior (Barras de Vida, Energia e Tempo) */
+        .hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 14px 20px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .fighter-hud {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .fighter-hud.p2 {
+            align-items: flex-end;
+        }
+
+        /* Avatar Retrato no HUD + Barras */
+        .hud-profile-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .fighter-hud.p2 .hud-profile-row {
+            flex-direction: row-reverse;
+        }
+
+        .hud-avatar {
+            width: clamp(42px, 5.2vw, 56px);
+            height: clamp(42px, 5.2vw, 56px);
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            background: #0f172a;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.65);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .fighter-hud.p1 .hud-avatar { border-color: #38bdf8; }
+        .fighter-hud.p2 .hud-avatar { border-color: #fb7185; }
+
+        .hud-bars-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .fighter-hud.p2 .hud-bars-col {
+            align-items: flex-end;
+        }
+
+        .fighter-name-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: 700;
+            font-size: clamp(0.85rem, 1.5vw, 1.15rem);
+            letter-spacing: 1px;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+        }
+
+        .badge-mode {
+            font-size: 0.7rem;
+            padding: 2px 7px;
+            border-radius: 6px;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #cbd5e1;
+        }
+
+        /* Barra de Vida com Rastro de Dano */
+        .health-bar-outer {
+            position: relative;
+            width: 100%;
+            height: clamp(16px, 2.4vw, 24px);
+            background: rgba(15, 23, 42, 0.88);
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .health-bar-damage {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+            background: #f59e0b;
+            transition: width 0.35s ease-out;
+        }
+
+        .health-bar-inner {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+
+        .p1 .health-bar-inner {
+            left: 0;
+            background: linear-gradient(90deg, #0284c7, #38bdf8);
+        }
+
+        .p1 .health-bar-damage {
+            left: 0;
+        }
+
+        .p2 .health-bar-inner {
+            right: 0;
+            background: linear-gradient(270deg, #e11d48, #fb7185);
+        }
+
+        .p2 .health-bar-damage {
+            right: 0;
+        }
+
+        /* Barra de Energia Especial */
+        .energy-bar-outer {
+            width: 68%;
+            height: 8px;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .energy-bar-inner {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #eab308, #fef08a);
+            transition: width 0.15s ease;
+        }
+
+        .p2 .energy-bar-inner {
+            float: right;
+        }
+
+        .energy-bar-inner.ready {
+            box-shadow: 0 0 12px #facc15;
+            animation: pulseGlow 0.8s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            from { filter: brightness(1); }
+            to { filter: brightness(1.45); }
+        }
+
+        /* Cronômetro Central */
+        .timer-box {
+            min-width: clamp(54px, 6.5vw, 72px);
+            height: clamp(46px, 5.5vw, 60px);
+            background: linear-gradient(180deg, #1e293b, #0f172a);
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: clamp(1.3rem, 2.5vw, 1.9rem);
+            font-weight: 700;
+            color: #f8fafc;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
+        }
+
+        .timer-box.low-time {
+            color: #fb7185;
+            border-color: #fb7185;
+        }
+
+        /* Contador de Combo Dinâmico no HUD */
+        .combo-display {
+            position: absolute;
+            top: 86px;
+            z-index: 12;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            opacity: 0;
+            transform: scale(0.85);
+            transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .combo-display.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .combo-display.p1 { left: 22px; align-items: flex-start; }
+        .combo-display.p2 { right: 22px; align-items: flex-end; }
+
+        .combo-hits {
+            font-family: 'Chakra Petch', sans-serif;
+            font-style: italic;
+            font-weight: 700;
+            font-size: clamp(1.35rem, 2.6vw, 2rem);
+            color: #facc15;
+            text-shadow: 0 3px 10px rgba(0, 0, 0, 0.9), 0 0 16px rgba(250, 204, 21, 0.45);
+            line-height: 1;
+        }
+
+        .combo-name-tag {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 6px;
+            background: rgba(15, 23, 42, 0.88);
+            border: 1px solid rgba(250, 204, 21, 0.5);
+            color: #fef08a;
+        }
+
+        .combo-damage-tag {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #f8fafc;
+            text-shadow: 0 2px 4px #000;
+        }
+
+        .combo-timer-track {
+            width: 110px;
+            height: 4px;
+            background: rgba(15, 23, 42, 0.85);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .combo-timer-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #f59e0b, #fef08a);
+        }
+
+        /* Telas Sobrepostas (Menu Inicial, Seleção e Fim de Jogo) */
+        .overlay-screen {
+            position: absolute;
+            inset: 0;
+            background: rgba(9, 12, 20, 0.90);
+            backdrop-filter: blur(8px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 18px 24px;
+            text-align: center;
+            z-index: 20;
+            transition: opacity 0.25s ease;
+            overflow-y: auto;
+        }
+
+        .overlay-screen.hidden {
+            display: none;
+        }
+
+        .overlay-title {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: clamp(1.5rem, 3.8vw, 2.8rem);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            letter-spacing: 2px;
+        }
+
+        .overlay-subtitle {
+            color: #94a3b8;
+            font-size: clamp(0.85rem, 1.4vw, 1rem);
+            margin-bottom: 16px;
+            max-width: 600px;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .btn {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: clamp(0.9rem, 1.5vw, 1.05rem);
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.12);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            color: #fff;
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.45);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #e11d48, #be123c);
+            color: #fff;
+            box-shadow: 0 8px 20px rgba(225, 29, 72, 0.45);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #0f172a;
+            box-shadow: 0 8px 20px rgba(245, 158, 11, 0.45);
+            border: 1px solid rgba(255,255,255,0.4);
+        }
+
+        .btn-neutral {
+            background: #1e293b;
+            color: #e2e8f0;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        /* Seletor de Dificuldade */
+        .difficulty-box {
+            margin-top: 18px;
+            background: rgba(30, 41, 59, 0.65);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 14px;
+            padding: 12px 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .difficulty-label {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #cbd5e1;
+        }
+
+        .diff-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .diff-pill {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 7px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: #0f172a;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .diff-pill.active[data-diff="easy"] { background: #16a34a; color: #fff; border-color: #4ade80; }
+        .diff-pill.active[data-diff="medium"] { background: #0284c7; color: #fff; border-color: #38bdf8; }
+        .diff-pill.active[data-diff="hard"] { background: #ea580c; color: #fff; border-color: #fb923c; }
+        .diff-pill.active[data-diff="master"] { background: #9333ea; color: #fff; border-color: #e879f9; box-shadow: 0 0 12px rgba(168,85,247,0.6); }
+
+        /* Tela de Seleção de Personagens e Cenário */
+        .select-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.15fr 1fr;
+            gap: 14px;
+            width: 100%;
+            max-width: 940px;
+            align-items: stretch;
+            margin-bottom: 14px;
+        }
+
+        @media (max-width: 760px) {
+            .select-grid {
+                grid-template-columns: 1fr;
+                max-height: 62vh;
+                overflow-y: auto;
+            }
+        }
+
+        .select-panel {
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 14px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .select-panel h3 {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .char-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 7px;
+        }
+
+        .char-card {
+            background: #1e293b;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            padding: 7px 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .char-card:hover {
+            background: #273549;
+            transform: translateY(-2px);
+        }
+
+        .char-card.selected-p1 {
+            border-color: #38bdf8;
+            background: rgba(2, 132, 199, 0.25);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+        }
+
+        .char-card.selected-p2 {
+            border-color: #fb7185;
+            background: rgba(225, 29, 72, 0.25);
+            box-shadow: 0 0 12px rgba(251, 113, 133, 0.35);
+        }
+
+        .char-portrait-thumb {
+            width: 56px;
+            height: 56px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: #0f172a;
+            object-fit: cover;
+        }
+
+        .char-card-name {
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #f8fafc;
+        }
+
+        .char-card-role {
+            font-size: 0.68rem;
+            color: #94a3b8;
+        }
+
+        .stat-bars {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            text-align: left;
+            font-size: 0.72rem;
+            color: #cbd5e1;
+            background: rgba(0,0,0,0.25);
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .stat-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .stat-track {
+            flex: 1;
+            height: 6px;
+            background: #0f172a;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .stat-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.25s ease;
+        }
+
+        /* Seletor de Cenários */
+        .stage-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .stage-card {
+            border-radius: 10px;
+            border: 2px solid rgba(255,255,255,0.14);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s ease;
+            position: relative;
+            overflow: hidden;
+            background: #0f172a;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stage-card.active {
+            border-color: #facc15;
+            box-shadow: 0 0 14px rgba(250, 204, 21, 0.45);
+            transform: scale(1.02);
+        }
+
+        .stage-thumb-img {
+            width: 100%;
+            height: 54px;
+            object-fit: cover;
+            display: block;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .stage-card-info {
+            padding: 5px 6px;
+            background: rgba(15, 23, 42, 0.92);
+        }
+
+        .stage-card-title {
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: #fff;
+        }
+
+        .stage-card-sub {
+            font-size: 0.65rem;
+            color: #94a3b8;
+        }
+
+        /* Modal Lista de Golpes & Combos */
+        .moves-modal-card {
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 16px;
+            padding: 18px 22px;
+            max-width: 780px;
+            width: 100%;
+            text-align: left;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
+            max-height: 84%;
+            overflow-y: auto;
+        }
+
+        .moves-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 10px;
+            margin: 12px 0 16px;
+        }
+
+        .move-item {
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+
+        .move-item h4 {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.92rem;
+            color: #facc15;
+            margin-bottom: 4px;
+        }
+
+        .move-item p {
+            font-size: 0.78rem;
+            color: #cbd5e1;
+            line-height: 1.4;
+        }
+
+        /* Botões utilitários no canto inferior do Canvas */
+        .canvas-tools {
+            position: absolute;
+            bottom: 10px;
+            right: 12px;
+            z-index: 15;
+            display: flex;
+            gap: 8px;
+        }
+
+        .tool-btn {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #cbd5e1;
+            font-size: 0.74rem;
+            padding: 5px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .tool-btn:hover {
+            background: rgba(30, 41, 59, 0.98);
+            color: #fff;
+        }
+
+        /* Painel de Instruções de Controles Abaixo da Arena */
+        .controls-guide {
+            width: 100%;
+            max-width: 1024px;
+            margin-top: 14px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+            gap: 12px;
+        }
+
+        .control-card {
+            background: #141824;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-card h3 {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 1rem;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .p1-title { color: #38bdf8; }
+        .p2-title { color: #fb7185; }
+
+        .keys-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 14px;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+        }
+
+        kbd {
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-bottom-width: 3px;
+            border-radius: 5px;
+            padding: 2px 6px;
+            font-family: 'Chakra Petch', monospace;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: #f8fafc;
+        }
+
+        /* Controles Virtuais para Dispositivos Móveis / Touch */
+        .mobile-controls {
+            display: none;
+            width: 100%;
+            max-width: 1024px;
+            margin-top: 12px;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        @media (max-width: 820px) {
+            .mobile-controls {
+                display: flex;
+            }
+        }
+
+        .touch-pad {
+            display: flex;
+            gap: 8px;
+        }
+
+        .touch-btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            background: rgba(30, 41, 59, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+        }
+
+        .touch-btn:active {
+            background: #38bdf8;
+            color: #0f172a;
+        }
     </style>
 </head>
 <body>
 
-    <div id="game-container">
-        <canvas id="canvas" width="800" height="500"></canvas>
+    <header>
+        <h1>Duelo de Sombras</h1>
+    </header>
 
-        <div id="hud">
-            <div class="score-card" id="team1-card">
-                <span id="p1-name">BRA</span>: <span id="p1-score">0</span>
-                <div class="dots" id="p1-dots"></div>
-            </div>
-            <div style="font-size: 20px; font-weight: bold; text-shadow: 0 2px 4px #000;" id="turn-indicator">SUA VEZ DE CHUTAR</div>
-            <div class="score-card" id="team2-card">
-                <span id="p2-name">ARG</span>: <span id="p2-score">0</span>
-                <div class="dots" id="p2-dots"></div>
-            </div>
-        </div>
-
-        <div id="power-meter-container">
-            <div id="power-meter-fill"></div>
-        </div>
-
-        <div id="controls-hint">Use as setas para mover a mira | Pressione ESPAÇO para Chutar</div>
-
-        <!-- MENU PRINCIPAL -->
-        <div id="menu-screen" class="ui-panel">
-            <h1>Flash Football Penalty</h1>
-            <div class="selection-box">
-                <div class="player-select">
-                    <h3>Jogador 1</h3>
-                    <select id="p1-team-select"></select>
-                </div>
-                <div class="player-select">
-                    <h3>Jogador 2 / IA</h3>
-                    <select id="p2-team-select"></select>
+    <!-- Arena Principal -->
+    <div class="game-wrapper" id="gameWrapper">
+        <!-- Interface Superior (HUD) -->
+        <div class="hud">
+            <!-- Jogador 1 -->
+            <div class="fighter-hud p1">
+                <div class="hud-profile-row">
+                    <canvas class="hud-avatar" id="p1HudAvatar" width="72" height="72"></canvas>
+                    <div class="hud-bars-col">
+                        <div class="fighter-name-row">
+                            <span id="p1HudName">KAEL (J1)</span>
+                            <span class="badge-mode">HUMANO</span>
+                        </div>
+                        <div class="health-bar-outer">
+                            <div class="health-bar-damage" id="p1DamageBar"></div>
+                            <div class="health-bar-inner" id="p1HealthBar"></div>
+                        </div>
+                        <div class="energy-bar-outer" title="Energia Super (100% = SUPER!)">
+                            <div class="energy-bar-inner" id="p1EnergyBar"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div style="margin-bottom: 20px;">
-                <label style="font-size: 16px; cursor: pointer;">
-                    <input type="checkbox" id="pvp-mode" style="transform: scale(1.3); margin-right: 8px;"> Modo 2 Jogadores (Local X1)
-                </label>
+
+            <!-- Cronômetro -->
+            <div class="timer-box" id="timerDisplay">60</div>
+
+            <!-- Jogador 2 -->
+            <div class="fighter-hud p2">
+                <div class="hud-profile-row">
+                    <canvas class="hud-avatar" id="p2HudAvatar" width="72" height="72"></canvas>
+                    <div class="hud-bars-col">
+                        <div class="fighter-name-row">
+                            <span class="badge-mode" id="p2ModeBadge">CPU • MÉDIO</span>
+                            <span id="p2HudName">SORA (J2)</span>
+                        </div>
+                        <div class="health-bar-outer">
+                            <div class="health-bar-damage" id="p2DamageBar"></div>
+                            <div class="health-bar-inner" id="p2HealthBar"></div>
+                        </div>
+                        <div class="energy-bar-outer" title="Energia Super (100% = SUPER!)">
+                            <div class="energy-bar-inner" id="p2EnergyBar"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <button class="btn" id="start-btn">INICIAR JOGO</button>
         </div>
 
-        <!-- TELA DE FIM DE JOGO -->
-        <div id="gameover-screen" class="ui-panel hidden">
-            <h1 id="winner-title">BRASIL VENCEU!</h1>
-            <p id="final-score" style="font-size: 24px; margin-bottom: 20px; color: #fff;"></p>
-            <button class="btn" id="restart-btn">JOGAR NOVAMENTE</button>
+        <!-- Contadores de Combo Dinâmicos -->
+        <div class="combo-display p1" id="p1ComboDisplay">
+            <div class="combo-hits" id="p1ComboHits">2 HITS!</div>
+            <div class="combo-name-tag" id="p1ComboName">COMBO DUPLO</div>
+            <div class="combo-damage-tag" id="p1ComboDmg">16 DANO</div>
+            <div class="combo-timer-track"><div class="combo-timer-fill" id="p1ComboTimer"></div></div>
+        </div>
+
+        <div class="combo-display p2" id="p2ComboDisplay">
+            <div class="combo-hits" id="p2ComboHits">2 HITS!</div>
+            <div class="combo-name-tag" id="p2ComboName">COMBO DUPLO</div>
+            <div class="combo-damage-tag" id="p2ComboDmg">16 DANO</div>
+            <div class="combo-timer-track"><div class="combo-timer-fill" id="p2ComboTimer"></div></div>
+        </div>
+
+        <!-- Botões Utilitários no Canto da Arena -->
+        <div class="canvas-tools">
+            <button class="tool-btn" id="btnMovesList" style="border-color: #facc15; color: #fef08a;">Golpes & Combos</button>
+            <button class="tool-btn" id="btnQuickStage" title="Alternar cenário durante a partida">Trocar Cenário</button>
+            <button class="tool-btn" id="btnMuteAudio">Som: ON</button>
+            <button class="tool-btn" id="toggleHitboxBtn">Hitboxes: OFF</button>
+        </div>
+
+        <!-- Modal de Lista de Golpes e Combos -->
+        <div class="overlay-screen hidden" id="movesModal" style="z-index: 30;">
+            <div class="moves-modal-card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2 style="font-family: 'Chakra Petch', sans-serif; color: #38bdf8; text-transform: uppercase;">Lista de Golpes & Combos Encadeados</h2>
+                    <button class="btn btn-neutral" style="padding: 6px 14px; font-size: 0.85rem;" id="btnCloseMoves">Fechar</button>
+                </div>
+                <p style="font-size: 0.82rem; color: #94a3b8; margin-top: 4px;">
+                    Acerte um golpe e pressione o próximo comando rapidamente para cancelar a recuperação e executar combos devastadores!
+                </p>
+                <div class="moves-grid">
+                    <div class="move-item">
+                        <h4>⚡ Combo Relâmpago (3 Hits)</h4>
+                        <p><kbd>Soco</kbd> ➔ <kbd>Soco</kbd> ➔ <kbd>Chute</kbd><br>Finaliza com um chute giratório energizado de alto impacto.</p>
+                    </div>
+                    <div class="move-item">
+                        <h4>🔥 Fúria Ascendente (3 Hits)</h4>
+                        <p><kbd>Chute</kbd> ➔ <kbd>Soco</kbd> ➔ <kbd>Chute</kbd><br>Lança o oponente no ar com uma onda ascendente.</p>
+                    </div>
+                    <div class="move-item">
+                        <h4>💥 Finalizador Elemental (3 Hits)</h4>
+                        <p><kbd>Soco</kbd> ➔ <kbd>Chute</kbd> ➔ <kbd>Super</kbd><br>Cancela o chute diretamente no Super com velocidade extra!</p>
+                    </div>
+                    <div class="move-item">
+                        <h4>🦅 Extensão Aérea</h4>
+                        <p>No Ar: <kbd>Soco</kbd> ou <kbd>Chute</kbd> ➔ Ao cair: <kbd>Soco</kbd><br>Emenda um golpe aéreo com uma sequência terrestre.</p>
+                    </div>
+                    <div class="move-item">
+                        <h4>🛡️ Defesa Ativa (Bloqueio)</h4>
+                        <p>Segure <kbd>◀</kbd> (ou direcional oposto ao inimigo) ao ser atacado para reduzir 75% do dano.</p>
+                    </div>
+                    <div class="move-item">
+                        <h4>🌟 Ataque SUPER (100% Barra)</h4>
+                        <p>J1: <kbd>H</kbd> ou <kbd>L</kbd> | J2: <kbd>3</kbd>, <kbd>L</kbd> ou <kbd>Ç</kbd><br>Ativa o Cut-in cinematográfico e dispara um Mega Ataque multi-hit!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1. Tela Inicial: Modo de Jogo e Dificuldade -->
+        <div class="overlay-screen" id="startScreen">
+            <h2 class="overlay-title" style="color: #38bdf8;">Duelo de Sombras</h2>
+            <p class="overlay-subtitle">
+                Escolha o modo de batalha e o nível de desafio da Inteligência Artificial antes de selecionar seus guerreiros.
+            </p>
+            <div class="btn-group">
+                <button class="btn btn-primary" id="btnModeCPU">1 Jogador vs CPU</button>
+                <button class="btn btn-secondary" id="btnModePvP">2 Jogadores (Local)</button>
+            </div>
+
+            <div class="difficulty-box">
+                <span class="difficulty-label">Nível de Dificuldade da CPU</span>
+                <div class="diff-pills" id="difficultyPills">
+                    <button class="diff-pill" data-diff="easy">Fácil</button>
+                    <button class="diff-pill active" data-diff="medium">Médio</button>
+                    <button class="diff-pill" data-diff="hard">Difícil</button>
+                    <button class="diff-pill" data-diff="master">Mestre</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Tela de Seleção de Personagens e Cenário -->
+        <div class="overlay-screen hidden" id="selectScreen">
+            <h2 class="overlay-title" style="font-size: clamp(1.3rem, 2.8vw, 2rem); color: #f8fafc;">Escolha os Lutadores e a Arena</h2>
+
+            <div class="select-grid">
+                <!-- Seleção Jogador 1 -->
+                <div class="select-panel">
+                    <h3 style="color: #38bdf8;">Jogador 1</h3>
+                    <div class="char-cards" id="p1CharGrid"></div>
+                    <div class="stat-bars" id="p1StatsBox"></div>
+                </div>
+
+                <!-- Seleção de Cenário -->
+                <div class="select-panel">
+                    <h3 style="color: #facc15;">Cenário de Combate</h3>
+                    <div class="stage-cards" id="stageGrid"></div>
+                    <div style="margin-top: auto; font-size: 0.75rem; color: #94a3b8; padding-top: 6px;">
+                        O cenário selecionado também é exibido ao vivo ao fundo!
+                    </div>
+                </div>
+
+                <!-- Seleção Jogador 2 / CPU -->
+                <div class="select-panel">
+                    <h3 style="color: #fb7185;" id="p2SelectTitle">Oponente (CPU)</h3>
+                    <div class="char-cards" id="p2CharGrid"></div>
+                    <div class="stat-bars" id="p2StatsBox"></div>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-neutral" id="btnBackToMode">Voltar</button>
+                <button class="btn btn-gold" id="btnFightStart">INICIAR LUTA!</button>
+            </div>
+        </div>
+
+        <!-- 3. Tela de Fim de Jogo -->
+        <div class="overlay-screen hidden" id="gameOverScreen">
+            <h2 class="overlay-title" id="winnerTitle">JOGADOR 1 VENCEU!</h2>
+            <p class="overlay-subtitle" id="winnerSubtitle">Vitória por Nocaute!</p>
+            <div class="btn-group">
+                <button class="btn btn-primary" id="btnRestart">Revanche</button>
+                <button class="btn btn-gold" id="btnToCharSelect">Escolher Personagens</button>
+                <button class="btn btn-neutral" id="btnMainMenu">Menu Principal</button>
+            </div>
+        </div>
+
+        <!-- Canvas do Jogo -->
+        <canvas id="gameCanvas" width="1024" height="576"></canvas>
+    </div>
+
+    <!-- Controles Touch (Visível em telas menores) -->
+    <div class="mobile-controls">
+        <div class="touch-pad">
+            <button class="touch-btn" data-key="KeyA">◀</button>
+            <button class="touch-btn" data-key="KeyD">▶</button>
+            <button class="touch-btn" data-key="KeyW">▲</button>
+        </div>
+        <div class="touch-pad">
+            <button class="touch-btn" data-key="KeyF">SOCO</button>
+            <button class="touch-btn" data-key="KeyG">CHUTE</button>
+            <button class="touch-btn" style="border-color: #facc15; color: #facc15;" data-key="KeyH">ESP</button>
         </div>
     </div>
 
+    <!-- Guia de Controles na Tela -->
+    <section class="controls-guide">
+        <div class="control-card">
+            <h3 class="p1-title">● Controles — Jogador 1</h3>
+            <div class="keys-list">
+                <span><kbd>A</kbd> <kbd>D</kbd> Mover / Defender</span>
+                <span><kbd>W</kbd> Pular</span>
+                <span><kbd>F</kbd> Soco</span>
+                <span><kbd>G</kbd> Chute</span>
+                <span><kbd>H</kbd> / <kbd>L</kbd> SUPER (100%)</span>
+            </div>
+        </div>
+        <div class="control-card">
+            <h3 class="p2-title">● Controles — Jogador 2</h3>
+            <div class="keys-list">
+                <span><kbd>◀</kbd> <kbd>▶</kbd> Mover / Defender</span>
+                <span><kbd>▲</kbd> Pular</span>
+                <span><kbd>J</kbd>/<kbd>1</kbd> Soco</span>
+                <span><kbd>K</kbd>/<kbd>2</kbd> Chute</span>
+                <span><kbd>3</kbd>/<kbd>Ç</kbd> SUPER (100%)</span>
+            </div>
+        </div>
+    </section>
+
     <script>
-        // WEB AUDIO SYNTHESIZER
-        const AudioSys = {
-            ctx: null,
-            init() {
-                if (!this.ctx) {
-                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-            },
-            whistle() {
-                if (!this.ctx) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(2400, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(1800, this.ctx.currentTime + 0.25);
-                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.25);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.25);
-            },
-            kick() {
-                if (!this.ctx) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(150, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.1);
-                gain.gain.setValueAtTime(0.6, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.1);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.1);
-            },
-            post() {
-                if (!this.ctx) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.3);
-                gain.gain.setValueAtTime(0.7, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.3);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.3);
-            },
-            cheer() {
-                if (!this.ctx) return;
-                const bufferSize = this.ctx.sampleRate * 1.5;
-                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-                const data = buffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) {
-                    data[i] = Math.random() * 2 - 1;
-                }
-                const noise = this.ctx.createBufferSource();
-                noise.buffer = buffer;
-                const filter = this.ctx.createBiquadFilter();
-                filter.type = 'bandpass';
-                filter.frequency.value = 1000;
-                filter.Q.value = 1.0;
-                const gain = this.ctx.createGain();
-                gain.gain.setValueAtTime(0.01, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.3, this.ctx.currentTime + 0.2);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 1.5);
-                noise.connect(filter);
-                filter.connect(gain);
-                gain.connect(this.ctx.destination);
-                noise.start();
-            },
-            boo() {
-                if (!this.ctx) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(120, this.ctx.currentTime);
-                osc.frequency.linearRampToValueAtTime(90, this.ctx.currentTime + 0.8);
-                gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.2, this.ctx.currentTime + 0.2);
-                gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.8);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.8);
-            }
-        };
+        /**
+         * DUELO DE SOMBRAS - EDIÇÃO DEFINITIVA
+         * Retratos ilustrados dos 4 personagens, miniaturas dos 4 cenários,
+         * Sistema real de combos encadeados, Defesa Ativa e Animação Cinematográfica de SUPER!
+         */
 
-        // SELEÇÕES
-        const TEAMS = {
-            BRA: { name: 'Brasil', shirt: '#FFDC00', shorts: '#002776', socks: '#FFFFFF', stripes: false, keeper: '#00E676' },
-            ARG: { name: 'Argentina', shirt: '#75AADB', shorts: '#000000', socks: '#FFFFFF', stripes: true, stripeColor: '#FFFFFF', keeper: '#FF9800' },
-            FRA: { name: 'França', shirt: '#002395', shorts: '#FFFFFF', socks: '#ED2939', stripes: false, keeper: '#FFEB3B' },
-            GER: { name: 'Alemanha', shirt: '#FFFFFF', shorts: '#000000', socks: '#FFFFFF', stripes: false, keeper: '#ED2939' },
-            ESP: { name: 'Espanha', shirt: '#AA151B', shorts: '#002B45', socks: '#F1BF00', stripes: false, keeper: '#00BCD4' },
-            POR: { name: 'Portugal', shirt: '#FF0000', shorts: '#006600', socks: '#FF0000', stripes: false, keeper: '#9C27B0' },
-            ENG: { name: 'Inglaterra', shirt: '#FFFFFF', shorts: '#000080', socks: '#FFFFFF', stripes: false, keeper: '#FF5722' },
-            ITA: { name: 'Itália', shirt: '#004687', shorts: '#FFFFFF', socks: '#004687', stripes: false, keeper: '#FFC107' }
-        };
-
-        // CONFIGURAÇÕES DO CANVAS E JOGO
-        const canvas = document.getElementById('canvas');
+        const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Geometria da trave
-        const GOAL = {
-            x: 200,
-            y: 110,
-            w: 400,
-            h: 150,
-            postWidth: 12
+        const CANVAS_WIDTH = 1024;
+        const CANVAS_HEIGHT = 576;
+        const GROUND_Y = 490;
+        const GRAVITY = 0.85;
+
+        /**
+         * SISTEMA DE ÁUDIO SINTETIZADO (WEB AUDIO API)
+         */
+        const SoundFX = {
+            ctx: null,
+            muted: false,
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) this.ctx = new AudioContext();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            },
+            playTone(freq, endFreq, duration, type = 'sine', volume = 0.15) {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, now);
+                osc.frequency.exponentialRampToValueAtTime(Math.max(20, endFreq), now + duration);
+
+                gain.gain.setValueAtTime(volume, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + duration);
+            },
+            select() { this.playTone(520, 780, 0.08, 'triangle', 0.12); },
+            jump() { this.playTone(180, 420, 0.14, 'sine', 0.12); },
+            punch() { this.playTone(175, 55, 0.11, 'square', 0.16); },
+            kick() { this.playTone(140, 40, 0.16, 'sawtooth', 0.18); },
+            block() { this.playTone(480, 260, 0.09, 'triangle', 0.15); },
+            comboFinisher() {
+                this.playTone(260, 620, 0.18, 'sawtooth', 0.18);
+                setTimeout(() => this.playTone(520, 880, 0.16, 'triangle', 0.15), 60);
+            },
+            superCutIn() {
+                this.playTone(110, 680, 0.42, 'sawtooth', 0.22);
+                this.playTone(220, 980, 0.38, 'sine', 0.18);
+                setTimeout(() => this.playTone(85, 35, 0.45, 'square', 0.2), 180);
+            },
+            superBlast() {
+                this.playTone(340, 960, 0.28, 'sawtooth', 0.2);
+                setTimeout(() => this.playTone(720, 140, 0.45, 'sawtooth', 0.22), 80);
+            },
+            ko() {
+                this.playTone(220, 45, 0.55, 'sawtooth', 0.24);
+            }
         };
 
-        // Estado do Jogo
-        let gameState = 'MENU'; // MENU, AIMING, POWERING, KICKING, RESULT, GAMEOVER
-        let isPvP = false;
-        let p1Team = 'BRA';
-        let p2Team = 'ARG';
-        let currentTurn = 1; // 1 ou 2
-        let round = 1;
-        let maxRounds = 5;
-
-        let p1Score = 0;
-        let p2Score = 0;
-        let p1History = [];
-        let p2History = [];
-
-        // Mira
-        let target = { x: 400, y: 185 };
-        const AIM_BOUNDS = { minX: 210, maxX: 590, minY: 120, maxY: 250 };
-        let aimKeys = { left: false, right: false, up: false, down: false };
-
-        // Força
-        let power = 0;
-        let powerDir = 1;
-
-        // Bola
-        let ball = {
-            x: 400,
-            y: 410,
-            z: 0,
-            vx: 0,
-            vy: 0,
-            vz: 0,
-            startX: 400,
-            startY: 410,
-            radius: 12,
-            curve: 0,
-            rotation: 0
+        /**
+         * CATÁLOGO DOS 4 PERSONAGENS ÚNICOS
+         */
+        const CHARACTERS = {
+            kael: {
+                id: 'kael',
+                name: 'KAEL',
+                title: 'Guerreiro Solar',
+                specialName: 'Esfera Solar',
+                superTitle: 'SUPERNOVA SOLAR!',
+                primaryColor: '#dc2626',
+                secondaryColor: '#1e293b',
+                accentColor: '#f97316',
+                glowColor: '#fbbf24',
+                skinColor: '#f1c27d',
+                hairColor: '#1e1b18',
+                headgear: 'bandana',
+                hasCape: false,
+                speed: 6.4,
+                maxHealth: 105,
+                powerMult: 1.0,
+                rangeBonus: 0,
+                specialStyle: 'fireball',
+                stats: { vel: 75, forca: 75, alcance: 70 }
+            },
+            sora: {
+                id: 'sora',
+                name: 'SORA',
+                title: 'Lâmina Sombria',
+                specialName: 'Corte Eclipse',
+                superTitle: 'ECLIPSE DAS MIL LÂMINAS!',
+                primaryColor: '#4c1d95',
+                secondaryColor: '#0f172a',
+                accentColor: '#c084fc',
+                glowColor: '#e879f9',
+                skinColor: '#f5d0a9',
+                hairColor: '#e2e8f0',
+                headgear: 'hood',
+                hasCape: true,
+                speed: 8.1,
+                maxHealth: 92,
+                powerMult: 0.92,
+                rangeBonus: 6,
+                specialStyle: 'slash',
+                stats: { vel: 98, forca: 65, alcance: 78 }
+            },
+            titan: {
+                id: 'titan',
+                name: 'TITAN',
+                title: 'Colosso de Ferro',
+                specialName: 'Onda Sísmica',
+                superTitle: 'CATACLISMA TECTÔNICO!',
+                primaryColor: '#475569',
+                secondaryColor: '#1e293b',
+                accentColor: '#eab308',
+                glowColor: '#fef08a',
+                skinColor: '#d99b66',
+                hairColor: '#334155',
+                headgear: 'visor',
+                hasCape: false,
+                speed: 4.9,
+                maxHealth: 130,
+                powerMult: 1.28,
+                rangeBonus: 8,
+                specialStyle: 'quake',
+                stats: { vel: 48, forca: 100, alcance: 82 }
+            },
+            lyra: {
+                id: 'lyra',
+                name: 'LYRA',
+                title: 'Mestra do Trovão',
+                specialName: 'Relâmpago Azul',
+                superTitle: 'TEMPESTADE CELESTIAL!',
+                primaryColor: '#0284c7',
+                secondaryColor: '#172554',
+                accentColor: '#38bdf8',
+                glowColor: '#bae6fd',
+                skinColor: '#f3c697',
+                hairColor: '#fef08a',
+                headgear: 'crown',
+                hasCape: true,
+                speed: 7.3,
+                maxHealth: 98,
+                powerMult: 1.05,
+                rangeBonus: 14,
+                specialStyle: 'lightning',
+                stats: { vel: 86, forca: 78, alcance: 94 }
+            }
         };
 
-        // Goleiro
-        let keeper = {
-            x: 400,
-            y: 245,
-            vx: 0,
-            vy: 0,
-            targetX: 400,
-            targetY: 245,
-            state: 'IDLE', // IDLE, DIVING, RECOVER
-            animTime: 0,
-            gloveLeft: { x: 380, y: 220 },
-            gloveRight: { x: 420, y: 220 }
+        /**
+         * CATÁLOGO DOS 4 CENÁRIOS DE FUNDO
+         */
+        const STAGES = {
+            dojo: {
+                id: 'dojo',
+                name: 'Dojo Pôr do Sol',
+                subtitle: 'Pétalas de Sakura',
+                previewBg: 'linear-gradient(135deg, #7c2d12, #ea580c, #fbbf24)',
+                skyTop: '#2a0818',
+                skyMid: '#9a3412',
+                skyBottom: '#fb923c',
+                floorTop: '#451a03',
+                floorBottom: '#1c0a00',
+                trimColor: '#fbbf24',
+                particleType: 'sakura'
+            },
+            cyberpunk: {
+                id: 'cyberpunk',
+                name: 'Metrópole Neon',
+                subtitle: 'Chuva Cibernética',
+                previewBg: 'linear-gradient(135deg, #090d16, #311042, #0284c7)',
+                skyTop: '#05070f',
+                skyMid: '#1e1b4b',
+                skyBottom: '#3b0764',
+                floorTop: '#1e293b',
+                floorBottom: '#020617',
+                trimColor: '#22d3ee',
+                particleType: 'rain'
+            },
+            volcano: {
+                id: 'volcano',
+                name: 'Templo Vulcânico',
+                subtitle: 'Lava e Brasas',
+                previewBg: 'linear-gradient(135deg, #1f0505, #991b1b, #f97316)',
+                skyTop: '#140303',
+                skyMid: '#450a0a',
+                skyBottom: '#9a3412',
+                floorTop: '#292524',
+                floorBottom: '#0c0a09',
+                trimColor: '#f97316',
+                particleType: 'embers'
+            },
+            snow: {
+                id: 'snow',
+                name: 'Pico Nevado',
+                subtitle: 'Aurora Boreal',
+                previewBg: 'linear-gradient(135deg, #042f2e, #0f766e, #38bdf8)',
+                skyTop: '#020617',
+                skyMid: '#064e3b',
+                skyBottom: '#0c4a6e',
+                floorTop: '#cbd5e1',
+                floorBottom: '#475569',
+                trimColor: '#7dd3fc',
+                particleType: 'snow'
+            }
         };
 
-        // Cobrador
-        let kicker = {
-            x: 400,
-            y: 450,
-            state: 'IDLE', // IDLE, RUNNING, KICKED
-            animFrame: 0,
-            legAngle: 0
-        };
+        /**
+         * GERADOR DE RETRATOS (FOTOS) DOS PERSONAGENS E MINIATURAS DOS CENÁRIOS
+         */
+        const PortraitCache = {};
+        const StageThumbCache = {};
 
-        // Animação e Efeitos de Torcida / Flares
-        let crowdFlashes = [];
-        let netOffset = [];
-        for(let i=0; i<20; i++) {
-            netOffset.push({x: 0, y: 0, vx: 0, vy: 0});
+        function drawCharacterPortraitToCanvas(targetCanvas, charData, flipHorizontal = false) {
+            const pCtx = targetCanvas.getContext('2d');
+            const w = targetCanvas.width;
+            const h = targetCanvas.height;
+
+            pCtx.save();
+            pCtx.clearRect(0, 0, w, h);
+
+            // Fundo estilizado com gradiente e aura elemental
+            const bgGrad = pCtx.createRadialGradient(w * 0.5, h * 0.45, w * 0.08, w * 0.5, h * 0.5, w * 0.72);
+            bgGrad.addColorStop(0, charData.accentColor);
+            bgGrad.addColorStop(0.55, charData.primaryColor);
+            bgGrad.addColorStop(1, '#090d16');
+            pCtx.fillStyle = bgGrad;
+            pCtx.fillRect(0, 0, w, h);
+
+            // Raios de energia no fundo
+            pCtx.strokeStyle = 'rgba(255,255,255,0.14)';
+            pCtx.lineWidth = Math.max(1.5, w * 0.015);
+            for (let i = 0; i < 8; i++) {
+                const ang = (i / 8) * Math.PI * 2;
+                pCtx.beginPath();
+                pCtx.moveTo(w * 0.5, h * 0.45);
+                pCtx.lineTo(w * 0.5 + Math.cos(ang) * w, h * 0.45 + Math.sin(ang) * h);
+                pCtx.stroke();
+            }
+
+            if (flipHorizontal) {
+                pCtx.translate(w, 0);
+                pCtx.scale(-1, 1);
+            }
+
+            const cx = w * 0.5;
+            const cy = h * 0.56;
+            const s = w / 100;
+
+            // Capa (Sora / Lyra)
+            if (charData.hasCape) {
+                pCtx.fillStyle = charData.accentColor;
+                pCtx.beginPath();
+                pCtx.moveTo(cx - 26 * s, cy + 12 * s);
+                pCtx.quadraticCurveTo(cx - 46 * s, cy + 32 * s, cx - 38 * s, h);
+                pCtx.lineTo(cx + 38 * s, h);
+                pCtx.quadraticCurveTo(cx + 46 * s, cy + 32 * s, cx + 26 * s, cy + 12 * s);
+                pCtx.closePath();
+                pCtx.fill();
+            }
+
+            // Ombros / Torso
+            pCtx.fillStyle = charData.primaryColor;
+            pCtx.beginPath();
+            pCtx.roundRect(cx - 32 * s, cy + 16 * s, 64 * s, 34 * s, 14 * s);
+            pCtx.fill();
+
+            // Detalhe de armadura no peito
+            pCtx.fillStyle = charData.secondaryColor;
+            pCtx.beginPath();
+            pCtx.moveTo(cx - 16 * s, cy + 18 * s);
+            pCtx.lineTo(cx, cy + 38 * s);
+            pCtx.lineTo(cx + 16 * s, cy + 18 * s);
+            pCtx.closePath();
+            pCtx.fill();
+
+            // Pescoço
+            pCtx.fillStyle = charData.skinColor;
+            pCtx.fillRect(cx - 9 * s, cy + 4 * s, 18 * s, 16 * s);
+
+            // Cabelo traseiro
+            pCtx.fillStyle = charData.hairColor;
+            pCtx.beginPath();
+            pCtx.arc(cx, cy - 12 * s, 26 * s, Math.PI * 0.8, Math.PI * 2.2);
+            pCtx.fill();
+
+            // Rosto
+            pCtx.fillStyle = charData.skinColor;
+            pCtx.beginPath();
+            pCtx.moveTo(cx - 20 * s, cy - 16 * s);
+            pCtx.lineTo(cx + 20 * s, cy - 16 * s);
+            pCtx.lineTo(cx + 16 * s, cy + 4 * s);
+            pCtx.lineTo(cx, cy + 12 * s);
+            pCtx.lineTo(cx - 16 * s, cy + 4 * s);
+            pCtx.closePath();
+            pCtx.fill();
+
+            // Sombreamento lateral no rosto
+            pCtx.fillStyle = 'rgba(0,0,0,0.12)';
+            pCtx.beginPath();
+            pCtx.moveTo(cx - 20 * s, cy - 16 * s);
+            pCtx.lineTo(cx - 6 * s, cy - 16 * s);
+            pCtx.lineTo(cx - 4 * s, cy + 10 * s);
+            pCtx.lineTo(cx - 16 * s, cy + 4 * s);
+            pCtx.closePath();
+            pCtx.fill();
+
+            // Cabelo frontal / Mechas anime
+            pCtx.fillStyle = charData.hairColor;
+            pCtx.beginPath();
+            pCtx.moveTo(cx - 24 * s, cy - 14 * s);
+            pCtx.lineTo(cx - 14 * s, cy - 38 * s);
+            pCtx.lineTo(cx - 4 * s, cy - 22 * s);
+            pCtx.lineTo(cx + 4 * s, cy - 42 * s);
+            pCtx.lineTo(cx + 14 * s, cy - 22 * s);
+            pCtx.lineTo(cx + 25 * s, cy - 34 * s);
+            pCtx.lineTo(cx + 22 * s, cy - 12 * s);
+            pCtx.closePath();
+            pCtx.fill();
+
+            // Acessório de cabeça específico
+            if (charData.headgear === 'hood') {
+                pCtx.fillStyle = charData.primaryColor;
+                pCtx.beginPath();
+                pCtx.arc(cx, cy - 12 * s, 27 * s, Math.PI * 0.9, Math.PI * 2.1);
+                pCtx.fill();
+            } else if (charData.headgear === 'visor') {
+                pCtx.fillStyle = '#334155';
+                pCtx.fillRect(cx - 22 * s, cy - 28 * s, 44 * s, 14 * s);
+            } else if (charData.headgear === 'crown') {
+                pCtx.fillStyle = charData.accentColor;
+                pCtx.beginPath();
+                pCtx.moveTo(cx - 16 * s, cy - 24 * s);
+                pCtx.lineTo(cx, cy - 42 * s);
+                pCtx.lineTo(cx + 16 * s, cy - 24 * s);
+                pCtx.closePath();
+                pCtx.fill();
+            }
+
+            // Bandana / Faixa
+            pCtx.fillStyle = charData.accentColor;
+            pCtx.fillRect(cx - 21 * s, cy - 21 * s, 42 * s, 7 * s);
+
+            // Olhos brilhantes estilo anime
+            pCtx.fillStyle = charData.glowColor;
+            pCtx.shadowColor = charData.glowColor;
+            pCtx.shadowBlur = 8 * s;
+
+            // Olho esquerdo
+            pCtx.beginPath();
+            pCtx.moveTo(cx - 14 * s, cy - 8 * s);
+            pCtx.lineTo(cx - 4 * s, cy - 5 * s);
+            pCtx.lineTo(cx - 12 * s, cy - 3 * s);
+            pCtx.closePath();
+            pCtx.fill();
+
+            // Olho direito
+            pCtx.beginPath();
+            pCtx.moveTo(cx + 14 * s, cy - 8 * s);
+            pCtx.lineTo(cx + 4 * s, cy - 5 * s);
+            pCtx.lineTo(cx + 12 * s, cy - 3 * s);
+            pCtx.closePath();
+            pCtx.fill();
+            pCtx.shadowBlur = 0;
+
+            // Sobrancelhas determinadas
+            pCtx.strokeStyle = '#0f172a';
+            pCtx.lineWidth = 2.2 * s;
+            pCtx.beginPath();
+            pCtx.moveTo(cx - 15 * s, cy - 11 * s);
+            pCtx.lineTo(cx - 3 * s, cy - 7 * s);
+            pCtx.moveTo(cx + 15 * s, cy - 11 * s);
+            pCtx.lineTo(cx + 3 * s, cy - 7 * s);
+            pCtx.stroke();
+
+            // Boca séria
+            pCtx.beginPath();
+            pCtx.moveTo(cx - 6 * s, cy + 4 * s);
+            pCtx.lineTo(cx + 6 * s, cy + 3 * s);
+            pCtx.stroke();
+
+            pCtx.restore();
         }
 
-        // INICIALIZAÇÃO CONTROLES E OPÇÕES
-        const p1Select = document.getElementById('p1-team-select');
-        const p2Select = document.getElementById('p2-team-select');
+        function generatePortraitDataURL(charId) {
+            if (PortraitCache[charId]) return PortraitCache[charId];
+            const c = document.createElement('canvas');
+            c.width = 140;
+            c.height = 140;
+            drawCharacterPortraitToCanvas(c, CHARACTERS[charId], false);
+            PortraitCache[charId] = c.toDataURL();
+            return PortraitCache[charId];
+        }
 
-        Object.keys(TEAMS).forEach(key => {
-            p1Select.innerHTML += `<option value="${key}">${TEAMS[key].name}</option>`;
-            p2Select.innerHTML += `<option value="${key}">${TEAMS[key].name}</option>`;
+        function generateStageThumbDataURL(stageId) {
+            if (StageThumbCache[stageId]) return StageThumbCache[stageId];
+            const st = STAGES[stageId];
+            const c = document.createElement('canvas');
+            c.width = 220;
+            c.height = 96;
+            const sCtx = c.getContext('2d');
+
+            const sky = sCtx.createLinearGradient(0, 0, 0, 76);
+            sky.addColorStop(0, st.skyTop);
+            sky.addColorStop(0.55, st.skyMid);
+            sky.addColorStop(1, st.skyBottom);
+            sCtx.fillStyle = sky;
+            sCtx.fillRect(0, 0, 220, 76);
+
+            if (stageId === 'dojo') {
+                sCtx.fillStyle = '#fde047';
+                sCtx.beginPath();
+                sCtx.arc(110, 38, 20, 0, Math.PI * 2);
+                sCtx.fill();
+                sCtx.fillStyle = '#290d06';
+                sCtx.fillRect(28, 22, 10, 54);
+                sCtx.fillRect(182, 22, 10, 54);
+                sCtx.fillRect(16, 18, 188, 7);
+            } else if (stageId === 'cyberpunk') {
+                sCtx.fillStyle = '#090d16';
+                sCtx.fillRect(18, 24, 34, 52);
+                sCtx.fillRect(65, 14, 42, 62);
+                sCtx.fillRect(120, 28, 36, 48);
+                sCtx.fillRect(168, 18, 34, 58);
+                sCtx.fillStyle = '#22d3ee';
+                sCtx.fillRect(24, 32, 4, 24);
+                sCtx.fillStyle = '#f43f5e';
+                sCtx.fillRect(176, 26, 4, 28);
+            } else if (stageId === 'volcano') {
+                sCtx.fillStyle = '#1c0707';
+                sCtx.beginPath();
+                sCtx.moveTo(40, 76);
+                sCtx.lineTo(95, 22);
+                sCtx.lineTo(125, 22);
+                sCtx.lineTo(180, 76);
+                sCtx.closePath();
+                sCtx.fill();
+                sCtx.fillStyle = '#f97316';
+                sCtx.fillRect(96, 20, 28, 5);
+            } else if (stageId === 'snow') {
+                sCtx.fillStyle = 'rgba(52, 211, 153, 0.45)';
+                sCtx.fillRect(0, 12, 220, 14);
+                sCtx.fillStyle = '#1e293b';
+                sCtx.beginPath();
+                sCtx.moveTo(10, 76);
+                sCtx.lineTo(65, 24);
+                sCtx.lineTo(120, 76);
+                sCtx.lineTo(165, 20);
+                sCtx.lineTo(215, 76);
+                sCtx.closePath();
+                sCtx.fill();
+                sCtx.fillStyle = '#f8fafc';
+                sCtx.beginPath();
+                sCtx.moveTo(65, 24);
+                sCtx.lineTo(52, 38);
+                sCtx.lineTo(78, 38);
+                sCtx.closePath();
+                sCtx.fill();
+            }
+
+            sCtx.fillStyle = st.floorTop;
+            sCtx.fillRect(0, 76, 220, 20);
+            sCtx.fillStyle = st.trimColor;
+            sCtx.fillRect(0, 76, 220, 2);
+
+            StageThumbCache[stageId] = c.toDataURL();
+            return StageThumbCache[stageId];
+        }
+
+        /**
+         * CONFIGURAÇÕES DE DIFICULDADE DA CPU
+         */
+        const DIFFICULTY_CONFIG = {
+            easy: {
+                label: 'FÁCIL',
+                reactionMin: 24,
+                reactionMax: 38,
+                aggression: 0.45,
+                specialChance: 0.25,
+                dodgeChance: 0.08,
+                speedScale: 0.72
+            },
+            medium: {
+                label: 'MÉDIO',
+                reactionMin: 12,
+                reactionMax: 22,
+                aggression: 0.72,
+                specialChance: 0.60,
+                dodgeChance: 0.30,
+                speedScale: 0.88
+            },
+            hard: {
+                label: 'DIFÍCIL',
+                reactionMin: 6,
+                reactionMax: 12,
+                aggression: 0.88,
+                specialChance: 0.85,
+                dodgeChance: 0.65,
+                speedScale: 0.98
+            },
+            master: {
+                label: 'MESTRE',
+                reactionMin: 2,
+                reactionMax: 6,
+                aggression: 0.96,
+                specialChance: 0.98,
+                dodgeChance: 0.90,
+                speedScale: 1.05
+            }
+        };
+
+        const gameState = {
+            status: 'menu',
+            vsCPU: true,
+            difficulty: 'medium',
+            p1CharId: 'kael',
+            p2CharId: 'sora',
+            stageId: 'dojo',
+            timer: 60,
+            timerInterval: null,
+            showHitboxes: false,
+            screenShake: 0,
+            hitStop: 0,
+            flashAlpha: 0,
+            announcement: '',
+            announcementTimer: 0,
+            worldTick: 0,
+            superCutIn: {
+                active: false,
+                timer: 0,
+                maxTimer: 52,
+                attacker: null
+            }
+        };
+
+        const keys = {};
+
+        window.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+            if (gameState.status !== 'playing' || gameState.superCutIn.active) return;
+
+            if (e.code === 'KeyW') player1.jump();
+            if (e.code === 'KeyF') player1.attack('punch');
+            if (e.code === 'KeyG') player1.attack('kick');
+            if (e.code === 'KeyH' || e.code === 'KeyL') player1.attack('special');
+
+            if (!gameState.vsCPU) {
+                if (e.code === 'ArrowUp') player2.jump();
+                if (e.code === 'KeyJ' || e.code === 'Numpad1' || e.code === 'Digit1') player2.attack('punch');
+                if (e.code === 'KeyK' || e.code === 'Numpad2' || e.code === 'Digit2') player2.attack('kick');
+                if (e.code === 'Semicolon' || e.code === 'Numpad3' || e.code === 'Digit3') player2.attack('special');
+            }
         });
-        p1Select.value = 'BRA';
-        p2Select.value = 'ARG';
 
-        // Listeners de Teclado
-        window.addEventListener('keydown', e => {
-            AudioSys.init();
-            if (e.key === 'ArrowLeft') aimKeys.left = true;
-            if (e.key === 'ArrowRight') aimKeys.right = true;
-            if (e.key === 'ArrowUp') aimKeys.up = true;
-            if (e.key === 'ArrowDown') aimKeys.down = true;
-
-            if (e.code === 'Space') {
-                if (gameState === 'AIMING') {
-                    gameState = 'POWERING';
-                    document.getElementById('power-meter-container').style.display = 'flex';
-                } else if (gameState === 'POWERING') {
-                    executeKick();
-                }
-            }
+        window.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
         });
 
-        window.addEventListener('keyup', e => {
-            if (e.key === 'ArrowLeft') aimKeys.left = false;
-            if (e.key === 'ArrowRight') aimKeys.right = false;
-            if (e.key === 'ArrowUp') aimKeys.up = false;
-            if (e.key === 'ArrowDown') aimKeys.down = false;
-        });
-
-        document.getElementById('start-btn').addEventListener('click', startGame);
-        document.getElementById('restart-btn').addEventListener('click', startGame);
-
-        function startGame() {
-            p1Team = p1Select.value;
-            p2Team = p2Select.value;
-            isPvP = document.getElementById('pvp-mode').checked;
-
-            document.getElementById('p1-name').innerText = p1Team;
-            document.getElementById('p2-name').innerText = p2Team;
-
-            p1Score = 0;
-            p2Score = 0;
-            p1History = [];
-            p2History = [];
-            round = 1;
-            currentTurn = 1;
-
-            document.getElementById('menu-screen').classList.add('hidden');
-            document.getElementById('gameover-screen').classList.add('hidden');
-
-            updateHUD();
-            resetTurn();
-            gameState = 'AIMING';
-        }
-
-        function resetTurn() {
-            target = { x: 400, y: 185 };
-            power = 0;
-            powerDir = 1;
-
-            ball.x = 400;
-            ball.y = 410;
-            ball.z = 0;
-            ball.vx = 0;
-            ball.vy = 0;
-            ball.vz = 0;
-
-            keeper.x = 400;
-            keeper.y = 245;
-            keeper.vx = 0;
-            keeper.vy = 0;
-            keeper.state = 'IDLE';
-
-            kicker.x = 360;
-            kicker.y = 450;
-            kicker.state = 'IDLE';
-
-            document.getElementById('power-meter-container').style.display = 'none';
-            document.getElementById('power-meter-fill').style.height = '0%';
-
-            const isP1 = currentTurn === 1;
-            const attackingTeam = isP1 ? TEAMS[p1Team].name : TEAMS[p2Team].name;
-            const isAI = (!isPvP && currentTurn === 2);
-
-            document.getElementById('turn-indicator').innerText = isAI ? `VEZ DE ${attackingTeam.toUpperCase()} (IA)` : `COBRANÇA: ${attackingTeam.toUpperCase()}`;
-
-            if (isAI) {
-                // IA decide o chute
-                setTimeout(() => {
-                    target.x = AIM_BOUNDS.minX + Math.random() * (AIM_BOUNDS.maxX - AIM_BOUNDS.minX);
-                    target.y = AIM_BOUNDS.minY + Math.random() * (AIM_BOUNDS.maxY - AIM_BOUNDS.minY);
-                    power = 40 + Math.random() * 50;
-                    executeKick();
-                }, 1200);
-            }
-        }
-
-        function executeKick() {
-            gameState = 'KICKING';
-            document.getElementById('power-meter-container').style.display = 'none';
-
-            kicker.state = 'RUNNING';
-
-            // Decisão do Goleiro (IA ou Defesas)
-            let keeperTargetX = 400;
-            let keeperTargetY = 245;
-
-            // Chance de acertar o lado baseada em aleatoriedade / tempo
-            const diveSides = [GOAL.x + 50, GOAL.x + 100, 400, GOAL.x + GOAL.w - 100, GOAL.x + GOAL.w - 50];
-            const diveHeights = [170, 245];
-
-            keeperTargetX = diveSides[Math.floor(Math.random() * diveSides.length)];
-            keeperTargetY = diveHeights[Math.floor(Math.random() * diveHeights.length)];
-
-            // Se for chute fraco/medio, aumentar chance de o goleiro pular na direção certa
-            if (Math.random() < 0.45) {
-                keeperTargetX = target.x + (Math.random() - 0.5) * 60;
-            }
-
-            keeper.targetX = keeperTargetX;
-            keeper.targetY = keeperTargetY;
-
-            // Animação de corrida antes de bater na bola
-            setTimeout(() => {
-                AudioSys.kick();
-                kicker.state = 'KICKED';
-
-                // Física do chute 3D
-                const dx = target.x - ball.x;
-                const dy = target.y - ball.y;
-                const dist = Math.hypot(dx, dy);
-
-                const speed = 12 + (power / 100) * 12;
-                ball.vx = (dx / dist) * speed;
-                ball.vy = (dy / dist) * speed;
-                ball.vz = (250 - target.y) * 0.05 + (power / 100) * 2; // Elevação Z
-
-                // Goleiro Inicia o Salto
-                keeper.state = 'DIVING';
-                keeper.vx = (keeper.targetX - keeper.x) * 0.08;
-                keeper.vy = (keeper.targetY - keeper.y) * 0.08;
-
-            }, 400);
-        }
-
-        function updateHUD() {
-            document.getElementById('p1-score').innerText = p1Score;
-            document.getElementById('p2-score').innerText = p2Score;
-
-            let h1 = '';
-            for(let i=0; i<maxRounds; i++) {
-                if(i < p1History.length) {
-                    h1 += `<div class="dot ${p1History[i] ? 'goal' : 'miss'}"></div>`;
-                } else {
-                    h1 += `<div class="dot"></div>`;
+        document.querySelectorAll('.touch-btn').forEach(btn => {
+            const code = btn.getAttribute('data-key');
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                keys[code] = true;
+                if (gameState.status === 'playing' && !gameState.superCutIn.active) {
+                    if (code === 'KeyW') player1.jump();
+                    if (code === 'KeyF') player1.attack('punch');
+                    if (code === 'KeyG') player1.attack('kick');
+                    if (code === 'KeyH') player1.attack('special');
                 }
-            }
-            document.getElementById('p1-dots').innerHTML = h1;
-
-            let h2 = '';
-            for(let i=0; i<maxRounds; i++) {
-                if(i < p2History.length) {
-                    h2 += `<div class="dot ${p2History[i] ? 'goal' : 'miss'}"></div>`;
-                } else {
-                    h2 += `<div class="dot"></div>`;
-                }
-            }
-            document.getElementById('p2-dots').innerHTML = h2;
-        }
-
-        // UPDATE PRINCIPAL DO JOGO
-        function update() {
-            // Atualizar Mira
-            if (gameState === 'AIMING') {
-                const speed = 4;
-                if (aimKeys.left && target.x > AIM_BOUNDS.minX) target.x -= speed;
-                if (aimKeys.right && target.x < AIM_BOUNDS.maxX) target.x += speed;
-                if (aimKeys.up && target.y > AIM_BOUNDS.minY) target.y -= speed;
-                if (aimKeys.down && target.y < AIM_BOUNDS.maxY) target.y += speed;
-            }
-
-            // Atualizar Barra de Força
-            if (gameState === 'POWERING') {
-                power += powerDir * 3;
-                if (power >= 100) { power = 100; powerDir = -1; }
-                if (power <= 0) { power = 0; powerDir = 1; }
-                document.getElementById('power-meter-fill').style.height = power + '%';
-            }
-
-            // Atualizar Movimento do Goleiro
-            if (keeper.state === 'DIVING') {
-                keeper.x += keeper.vx;
-                keeper.y += keeper.vy;
-                keeper.gloveLeft = { x: keeper.x - 35, y: keeper.y - 10 };
-                keeper.gloveRight = { x: keeper.x + 35, y: keeper.y - 10 };
-            }
-
-            // Atualizar Movimento da Bola
-            if (gameState === 'KICKING') {
-                ball.x += ball.vx;
-                ball.y += ball.vy;
-                ball.z += ball.vz;
-                ball.rotation += 0.2;
-
-                // Colisão com Luvas do Goleiro
-                const distGloveL = Math.hypot(ball.x - keeper.gloveLeft.x, ball.y - keeper.gloveLeft.y);
-                const distGloveR = Math.hypot(ball.x - keeper.gloveRight.x, ball.y - keeper.gloveRight.y);
-                const distBody = Math.hypot(ball.x - keeper.x, ball.y - keeper.y);
-
-                if (distGloveL < 30 || distGloveR < 30 || (distBody < 35 && ball.y < 260)) {
-                    // DEFESA!
-                    AudioSys.post();
-                    ball.vx = (Math.random() - 0.5) * 8;
-                    ball.vy = 4;
-                    ball.vz = -2;
-                    processResult(false);
-                }
-
-                // Checar Linha do Gol / Traves
-                if (ball.y <= GOAL.y + GOAL.h) {
-                    // Colisão Trave Esquerda / Direita / Travessão
-                    const inGoalX = ball.x > GOAL.x + GOAL.postWidth && ball.x < GOAL.x + GOAL.w - GOAL.postWidth;
-                    const inGoalY = ball.y > GOAL.y && ball.y < GOAL.y + GOAL.h;
-
-                    if (inGoalX && inGoalY) {
-                        // GOL!
-                        AudioSys.cheer();
-                        // Deformar rede
-                        const netIndex = Math.floor(((ball.x - GOAL.x) / GOAL.w) * netOffset.length);
-                        if (netOffset[netIndex]) netOffset[netIndex].y = 15;
-                        processResult(true);
-                    } else if (ball.y <= GOAL.y + GOAL.h + 20) {
-                        // FORA OU TRAVE
-                        if (Math.abs(ball.x - GOAL.x) < 20 || Math.abs(ball.x - (GOAL.x + GOAL.w)) < 20 || Math.abs(ball.y - GOAL.y) < 20) {
-                            AudioSys.post();
-                            ball.vx *= -0.5;
-                            ball.vy = 3;
-                        } else {
-                            AudioSys.boo();
-                        }
-                        processResult(false);
-                    }
-                }
-            }
-
-            // Recuperação das molas da rede
-            netOffset.forEach(n => {
-                n.y *= 0.9;
             });
+            btn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                keys[code] = false;
+            });
+        });
 
-            // Flashes da Torcida
-            if (Math.random() < 0.1) {
-                crowdFlashes.push({
-                    x: Math.random() * canvas.width,
-                    y: 30 + Math.random() * 70,
-                    alpha: 1
+        let particles = [];
+        let shockwaves = [];
+        let afterimages = [];
+        let projectiles = [];
+        let floatingTexts = [];
+        let ambientParticles = [];
+        let flyingCars = [];
+
+        function initAmbientEffects() {
+            ambientParticles = [];
+            for (let i = 0; i < 45; i++) {
+                ambientParticles.push({
+                    x: Math.random() * CANVAS_WIDTH,
+                    y: Math.random() * GROUND_Y,
+                    size: Math.random() * 4 + 2,
+                    speedX: (Math.random() - 0.5) * 2,
+                    speedY: Math.random() * 2 + 1,
+                    phase: Math.random() * Math.PI * 2
                 });
             }
-            crowdFlashes.forEach((f, index) => {
-                f.alpha -= 0.1;
-                if (f.alpha <= 0) crowdFlashes.splice(index, 1);
-            });
+
+            flyingCars = [];
+            for (let i = 0; i < 5; i++) {
+                flyingCars.push({
+                    x: Math.random() * CANVAS_WIDTH,
+                    y: 120 + i * 42,
+                    vx: (i % 2 === 0 ? 1 : -1) * (2.5 + Math.random() * 2.5),
+                    color: i % 2 === 0 ? '#22d3ee' : '#f43f5e'
+                });
+            }
         }
 
-        function processResult(isGoal) {
-            gameState = 'RESULT';
-            if (currentTurn === 1) {
-                if (isGoal) p1Score++;
-                p1History.push(isGoal);
-            } else {
-                if (isGoal) p2Score++;
-                p2History.push(isGoal);
+        class Shockwave {
+            constructor(x, y, color, maxRadius = 65) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.radius = 8;
+                this.maxRadius = maxRadius;
+                this.life = 16;
+                this.maxLife = 16;
+            }
+            update() {
+                this.radius += (this.maxRadius - this.radius) * 0.28;
+                this.life--;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.life / this.maxLife);
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = 4 * (this.life / this.maxLife);
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        class Afterimage {
+            constructor(x, y, width, height, color) {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+                this.color = color;
+                this.life = 12;
+                this.maxLife = 12;
+            }
+            update() { this.life--; }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = (this.life / this.maxLife) * 0.35;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.roundRect(this.x + 6, this.y + 10, this.width - 12, this.height - 14, 14);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        class Particle {
+            constructor({ x, y, vx, vy, color, size, life, gravity = 0.22 }) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.color = color;
+                this.size = size;
+                this.life = life;
+                this.maxLife = life;
+                this.gravity = gravity;
             }
 
-            updateHUD();
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += this.gravity;
+                this.life--;
+            }
 
-            setTimeout(() => {
-                // Checar Fim de Jogo ou Próximo Turno
-                if (currentTurn === 1) {
-                    currentTurn = 2;
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.life / this.maxLife);
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        class FloatingText {
+            constructor(x, y, text, color, scale = 1) {
+                this.x = x;
+                this.y = y;
+                this.text = text;
+                this.color = color;
+                this.scale = scale;
+                this.life = 52;
+                this.vy = -1.9;
+            }
+
+            update() {
+                this.y += this.vy;
+                this.vy *= 0.96;
+                this.life--;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.min(1, this.life / 18);
+                ctx.font = `italic 800 ${Math.round(22 * this.scale)}px "Chakra Petch", sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#000';
+                ctx.fillText(this.text, this.x + 2, this.y + 2);
+                ctx.fillStyle = this.color;
+                ctx.fillText(this.text, this.x, this.y);
+                ctx.restore();
+            }
+        }
+
+        /**
+         * MEGA PROJÉTIL / ATAQUE SUPER MULTI-HIT
+         */
+        class SuperProjectile {
+            constructor({ x, y, direction, owner, charData, comboBoost = false }) {
+                this.x = x;
+                this.y = y;
+                this.style = charData.specialStyle;
+                this.color = charData.accentColor;
+                this.glow = charData.glowColor;
+                this.owner = owner;
+                this.active = true;
+                this.tick = 0;
+                this.hitsRemaining = 3;
+                this.hitCooldown = 0;
+
+                const speedMult = comboBoost ? 1.25 : 1.0;
+
+                if (this.style === 'slash') {
+                    this.width = 88;
+                    this.height = 126;
+                    this.vx = direction * 18.5 * speedMult;
+                    this.damagePerHit = Math.round(10 * charData.powerMult);
+                } else if (this.style === 'quake') {
+                    this.width = 128;
+                    this.height = 96;
+                    this.y = GROUND_Y - 48;
+                    this.vx = direction * 13 * speedMult;
+                    this.damagePerHit = Math.round(12 * charData.powerMult);
+                } else if (this.style === 'lightning') {
+                    this.width = 140;
+                    this.height = 76;
+                    this.vx = direction * 20 * speedMult;
+                    this.damagePerHit = Math.round(11 * charData.powerMult);
                 } else {
-                    currentTurn = 1;
-                    round++;
+                    this.width = 108;
+                    this.height = 94;
+                    this.vx = direction * 15 * speedMult;
+                    this.damagePerHit = Math.round(11 * charData.powerMult);
+                }
+            }
+
+            getHitbox() {
+                return {
+                    x: this.x - this.width / 2,
+                    y: this.y - this.height / 2,
+                    width: this.width,
+                    height: this.height
+                };
+            }
+
+            update() {
+                this.tick++;
+                this.x += this.vx;
+                if (this.hitCooldown > 0) this.hitCooldown--;
+
+                for (let i = 0; i < 2; i++) {
+                    particles.push(new Particle({
+                        x: this.x - Math.sign(this.vx) * 20,
+                        y: this.y + (Math.random() - 0.5) * (this.height * 0.75),
+                        vx: -this.vx * 0.18,
+                        vy: this.style === 'quake' ? -Math.random() * 5 : (Math.random() - 0.5) * 3.5,
+                        color: Math.random() < 0.5 ? this.color : this.glow,
+                        size: Math.random() * 6 + 3,
+                        life: 20,
+                        gravity: this.style === 'quake' ? 0.25 : 0
+                    }));
                 }
 
-                // Verificar Condições de Vitória
-                const roundsLeftP1 = maxRounds - p1History.length;
-                const roundsLeftP2 = maxRounds - p2History.length;
+                if (this.x < -140 || this.x > CANVAS_WIDTH + 140) {
+                    this.active = false;
+                }
+            }
 
-                if (p1History.length >= maxRounds && p2History.length >= maxRounds) {
-                    if (p1Score !== p2Score) {
-                        endGame();
-                        return;
-                    } else {
-                        // Morte Súdita
-                        maxRounds++;
+            draw() {
+                ctx.save();
+                const dir = Math.sign(this.vx);
+                ctx.translate(this.x, this.y);
+                ctx.scale(dir, 1);
+
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 34;
+
+                if (this.style === 'slash') {
+                    for (let k = 0; k < 3; k++) {
+                        ctx.save();
+                        ctx.translate(-k * 18, (k - 1) * 8);
+                        ctx.fillStyle = k === 0 ? '#ffffff' : this.color;
+                        ctx.beginPath();
+                        ctx.arc(-8, 0, 58 - k * 6, -Math.PI * 0.46, Math.PI * 0.46);
+                        ctx.arc(-24, 0, 48 - k * 6, Math.PI * 0.46, -Math.PI * 0.46, true);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.restore();
                     }
-                } else if (p1Score > p2Score + roundsLeftP2 || p2Score > p1Score + roundsLeftP1) {
-                    endGame();
+                } else if (this.style === 'quake') {
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.moveTo(-60, 48);
+                    ctx.lineTo(-28, -36);
+                    ctx.lineTo(-4, -14);
+                    ctx.lineTo(22, -52);
+                    ctx.lineTo(44, -22);
+                    ctx.lineTo(64, -44);
+                    ctx.lineTo(64, 48);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 4;
+                    ctx.stroke();
+                } else if (this.style === 'lightning') {
+                    ctx.strokeStyle = this.color;
+                    ctx.lineWidth = 24;
+                    ctx.globalAlpha = 0.55;
+                    ctx.beginPath();
+                    ctx.moveTo(-70, 0);
+                    ctx.lineTo(-20, -24);
+                    ctx.lineTo(15, 22);
+                    ctx.lineTo(70, 0);
+                    ctx.stroke();
+
+                    ctx.globalAlpha = 1;
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 9;
+                    ctx.stroke();
+                } else {
+                    const pulse = Math.sin(this.tick * 0.5) * 6;
+                    const grad = ctx.createRadialGradient(0, 0, 6, 0, 0, 56 + pulse);
+                    grad.addColorStop(0, '#ffffff');
+                    grad.addColorStop(0.4, this.glow);
+                    grad.addColorStop(0.75, this.color);
+                    grad.addColorStop(1, 'rgba(0,0,0,0)');
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 56 + pulse, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.restore();
+
+                if (gameState.showHitboxes) {
+                    const hb = this.getHitbox();
+                    ctx.strokeStyle = '#facc15';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(hb.x, hb.y, hb.width, hb.height);
+                }
+            }
+        }
+
+        class Fighter {
+            constructor({ x, facing, charData }) {
+                this.startX = x;
+                this.startFacing = facing;
+                this.width = 58;
+                this.height = 128;
+                this.applyCharacter(charData);
+                this.reset();
+            }
+
+            applyCharacter(charData) {
+                this.char = charData;
+                this.name = charData.name;
+                this.primaryColor = charData.primaryColor;
+                this.secondaryColor = charData.secondaryColor;
+                this.accentColor = charData.accentColor;
+                this.glowColor = charData.glowColor;
+                this.maxHealth = charData.maxHealth;
+                this.moveSpeed = charData.speed;
+                this.powerMult = charData.powerMult;
+                this.rangeBonus = charData.rangeBonus;
+            }
+
+            reset() {
+                this.x = this.startX;
+                this.y = GROUND_Y - this.height;
+                this.vx = 0;
+                this.vy = 0;
+                this.facing = this.startFacing;
+
+                this.health = this.maxHealth;
+                this.energy = 40;
+                this.maxEnergy = 100;
+
+                this.isGrounded = true;
+                this.isBlocking = false;
+                this.state = 'idle';
+                this.attackType = null;
+                this.attackSubType = 'normal';
+                this.attackFrame = 0;
+                this.attackDuration = 0;
+                this.hasHitThisAttack = false;
+                this.canCancel = false;
+                this.hurtTimer = 0;
+
+                // Sistema de Sequências e Combos Encadeados
+                this.chainSequence = [];
+                this.chainWindowTimer = 0;
+                this.comboCount = 0;
+                this.comboDamage = 0;
+                this.comboName = '';
+                this.comboTimer = 0;
+                this.maxComboTimer = 105;
+
+                this.animTick = 0;
+            }
+
+            getHurtbox() {
+                return {
+                    x: this.x,
+                    y: this.y,
+                    width: this.width,
+                    height: this.height
+                };
+            }
+
+            getAttackHitbox() {
+                if (this.state !== 'attack' || this.hasHitThisAttack) return null;
+
+                if (this.attackType === 'punch') {
+                    if (this.attackFrame >= 3 && this.attackFrame <= 10) {
+                        const reach = 62 + this.rangeBonus;
+                        const isAir = !this.isGrounded;
+                        return {
+                            x: this.facing === 1 ? this.x + this.width - 5 : this.x - reach + 5,
+                            y: this.y + 24,
+                            width: reach,
+                            height: 28,
+                            damage: Math.round((isAir ? 9 : 8) * this.powerMult),
+                            knockbackX: this.facing * 4.5,
+                            knockbackY: isAir ? 2 : -1.5,
+                            energyGain: 15,
+                            moveLabel: isAir ? 'GOLPE AÉREO' : 'SOCO RÁPIDO'
+                        };
+                    }
+                } else if (this.attackType === 'kick') {
+                    if (this.attackFrame >= 5 && this.attackFrame <= 14) {
+                        const isSpinFinisher = this.attackSubType === 'spin_kick';
+                        const isLauncher = this.attackSubType === 'launcher_kick';
+                        const reach = (isSpinFinisher ? 94 : 82) + this.rangeBonus;
+
+                        let dmg = 13;
+                        let kx = this.facing * 7.5;
+                        let ky = -3.8;
+                        let label = 'CHUTE';
+
+                        if (isSpinFinisher) {
+                            dmg = 18;
+                            kx = this.facing * 12.5;
+                            ky = -5.5;
+                            label = 'COMBO RELÂMPAGO!';
+                        } else if (isLauncher) {
+                            dmg = 16;
+                            kx = this.facing * 5.0;
+                            ky = -10.5;
+                            label = 'FÚRIA ASCENDENTE!';
+                        }
+
+                        return {
+                            x: this.facing === 1 ? this.x + this.width - 5 : this.x - reach + 5,
+                            y: this.y + 46,
+                            width: reach,
+                            height: 40,
+                            damage: Math.round(dmg * this.powerMult),
+                            knockbackX: kx,
+                            knockbackY: ky,
+                            energyGain: 22,
+                            moveLabel: label,
+                            isFinisher: isSpinFinisher || isLauncher
+                        };
+                    }
+                }
+                return null;
+            }
+
+            jump() {
+                if (this.isGrounded && this.state !== 'attack' && this.state !== 'hurt' && this.state !== 'ko') {
+                    this.vy = -17.5;
+                    this.isGrounded = false;
+                    this.state = 'jump';
+                    SoundFX.jump();
+                    spawnDust(this.x + this.width / 2, GROUND_Y);
+                }
+            }
+
+            attack(type) {
+                if (this.state === 'hurt' || this.state === 'ko') return;
+
+                // Permite cancelar o golpe atual se o golpe anterior acertou (Combo Chain!)
+                if (this.state === 'attack' && !this.canCancel) return;
+
+                if (type === 'special') {
+                    if (this.energy < this.maxEnergy) return;
+
+                    const isComboCancel = this.state === 'attack' && this.canCancel;
+                    this.energy = 0;
+                    this.state = 'attack';
+                    this.attackType = 'special';
+                    this.attackSubType = isComboCancel ? 'combo_super' : 'super';
+                    this.attackFrame = 0;
+                    this.attackDuration = 28;
+                    this.hasHitThisAttack = true;
+                    this.canCancel = false;
+
+                    // Ativa a Animação Cinematográfica de Cut-in do Super!
+                    triggerSuperCutIn(this, isComboCancel);
                     return;
                 }
 
-                resetTurn();
-                gameState = 'AIMING';
-            , 2000);
-        }
+                // Determina qual variante de golpe encadeado será executada
+                let subType = 'normal';
+                if (this.chainWindowTimer > 0 && this.chainSequence.length > 0) {
+                    const seqStr = [...this.chainSequence, type].join('-');
+                    if (seqStr === 'punch-punch-kick') {
+                        subType = 'spin_kick';
+                    } else if (seqStr === 'kick-punch-kick') {
+                        subType = 'launcher_kick';
+                    }
+                } else {
+                    this.chainSequence = [];
+                }
 
-        function endGame() {
-            gameState = 'GAMEOVER';
-            const winnerText = p1Score > p2Score ? `${TEAMS[p1Team].name.toUpperCase()} VENCEU!` : `${TEAMS[p2Team].name.toUpperCase()} VENCEU!`;
-            document.getElementById('winner-title').innerText = winnerText;
-            document.getElementById('final-score').innerText = `Placar Final: ${p1Score} x ${p2Score}`;
-            document.getElementById('gameover-screen').classList.remove('hidden');
-        }
+                this.state = 'attack';
+                this.attackType = type;
+                this.attackSubType = subType;
+                this.attackFrame = 0;
+                this.hasHitThisAttack = false;
+                this.canCancel = false;
+                this.attackDuration = type === 'punch' ? 14 : (subType !== 'normal' ? 24 : 20);
 
-        // DESENHO (RENDER) EM CANVAS 2D ESTILO FLASH CLASSIC
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // 1. Céu e Estádio
-            ctx.fillStyle = '#1a2634';
-            ctx.fillRect(0, 0, canvas.width, 100);
-
-            // Arquibancada com Torcida Sintética
-            ctx.fillStyle = '#2c3e50';
-            ctx.fillRect(0, 50, canvas.width, 50);
-            for(let i=0; i<canvas.width; i+=8) {
-                for(let j=50; j<100; j+=8) {
-                    ctx.fillStyle = (i + j) % 3 === 0 ? '#e74c3c' : (i + j) % 2 === 0 ? '#3498db' : '#f1c40f';
-                    ctx.fillRect(i, j, 6, 6);
+                if (this.isGrounded) {
+                    this.vx = this.facing * (subType !== 'normal' ? 6.5 : (type === 'punch' ? 2.8 : 3.8));
                 }
             }
 
-            // Flashes de Câmera da Torcida
-            crowdFlashes.forEach(f => {
-                ctx.fillStyle = `rgba(255, 255, 255, ${f.alpha})`;
+            registerAttackSuccess(moveLabel, damageDealt, isFinisher = false) {
+                this.canCancel = true;
+                this.chainSequence.push(this.attackType);
+                if (this.chainSequence.length > 3) this.chainSequence.shift();
+                this.chainWindowTimer = 42;
+
+                this.comboCount++;
+                this.comboDamage += damageDealt;
+                this.comboTimer = this.maxComboTimer;
+
+                if (isFinisher) {
+                    this.comboName = moveLabel;
+                    SoundFX.comboFinisher();
+                } else if (this.comboCount === 1) {
+                    this.comboName = moveLabel;
+                } else if (this.comboCount === 2) {
+                    this.comboName = 'COMBO DUPLO';
+                } else if (this.comboCount === 3) {
+                    this.comboName = 'TRIPLO IMPACTO';
+                } else if (this.comboCount >= 4 && this.comboCount <= 5) {
+                    this.comboName = 'FÚRIA IMPLACÁVEL!';
+                } else {
+                    this.comboName = 'COMBO LENDÁRIO!!';
+                }
+            }
+
+            takeDamage(amount, knockbackX, knockbackY, hitX, hitY) {
+                if (this.state === 'ko') return;
+
+                // Verifica Defesa Ativa (Bloqueio ao segurar para trás no chão)
+                if (this.isBlocking && this.isGrounded && this.state !== 'attack' && this.state !== 'hurt') {
+                    const blockedDmg = Math.max(1, Math.round(amount * 0.25));
+                    this.health = Math.max(0, this.health - blockedDmg);
+                    this.energy = Math.min(this.maxEnergy, this.energy + 10);
+                    this.vx = knockbackX * 0.45;
+                    SoundFX.block();
+                    shockwaves.push(new Shockwave(hitX, hitY, '#38bdf8', 46));
+                    floatingTexts.push(new FloatingText(this.x + this.width / 2, this.y - 12, `BLOQUEIO -${blockedDmg}`, '#38bdf8', 0.9));
+
+                    if (this.health <= 0) {
+                        this.state = 'ko';
+                        this.vy = -8;
+                        SoundFX.ko();
+                    }
+                    return false;
+                }
+
+                this.health = Math.max(0, this.health - amount);
+                this.energy = Math.min(this.maxEnergy, this.energy + amount * 0.55);
+                this.vx = knockbackX;
+                this.vy = knockbackY;
+                this.isGrounded = false;
+                this.state = 'hurt';
+                this.hurtTimer = 14;
+                this.attackType = null;
+                this.canCancel = false;
+                this.chainSequence = [];
+
+                gameState.screenShake = amount >= 16 ? 12 : 6;
+                gameState.hitStop = amount >= 16 ? 4 : 2;
+                if (amount >= 18) gameState.flashAlpha = 0.22;
+
+                shockwaves.push(new Shockwave(hitX, hitY, '#ffffff', amount >= 16 ? 70 : 42));
+                floatingTexts.push(new FloatingText(this.x + this.width / 2, this.y - 12, `-${amount}`, '#fb7185'));
+                spawnHitSparks(hitX, hitY, this.accentColor);
+
+                if (this.health <= 0) {
+                    this.state = 'ko';
+                    this.vy = -9.5;
+                    this.vx = knockbackX * 1.4;
+                    SoundFX.ko();
+                }
+                return true;
+            }
+
+            update(opponent) {
+                this.animTick++;
+
+                if (this.chainWindowTimer > 0) {
+                    this.chainWindowTimer--;
+                    if (this.chainWindowTimer === 0) this.chainSequence = [];
+                }
+
+                if (this.comboTimer > 0) {
+                    this.comboTimer--;
+                    if (this.comboTimer === 0) {
+                        this.comboCount = 0;
+                        this.comboDamage = 0;
+                    }
+                }
+
+                if ((Math.abs(this.vx) > 7.0 || this.attackSubType !== 'normal' || this.attackType === 'special') && this.animTick % 3 === 0) {
+                    afterimages.push(new Afterimage(this.x, this.y, this.width, this.height, this.accentColor));
+                }
+
+                if (this.state === 'idle' || this.state === 'walk') {
+                    this.facing = opponent.x >= this.x ? 1 : -1;
+                }
+
+                if (this.state === 'hurt') {
+                    this.hurtTimer--;
+                    if (this.hurtTimer <= 0 && this.health > 0) {
+                        this.state = this.isGrounded ? 'idle' : 'jump';
+                    }
+                }
+
+                if (this.state === 'attack') {
+                    this.attackFrame++;
+                    if (this.isGrounded) this.vx *= 0.76;
+
+                    if (this.attackFrame >= this.attackDuration) {
+                        this.state = this.isGrounded ? 'idle' : 'jump';
+                        this.attackType = null;
+                        this.attackSubType = 'normal';
+                        this.canCancel = false;
+                    }
+                }
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.isGrounded && this.state !== 'walk') {
+                    this.vx *= 0.78;
+                } else if (!this.isGrounded) {
+                    this.vx *= 0.96;
+                }
+
+                if (this.y + this.height < GROUND_Y) {
+                    this.vy += GRAVITY;
+                    this.isGrounded = false;
+                } else {
+                    if (!this.isGrounded && this.vy > 4) {
+                        spawnDust(this.x + this.width / 2, GROUND_Y);
+                    }
+                    this.y = GROUND_Y - this.height;
+                    this.vy = 0;
+                    this.isGrounded = true;
+                    if (this.state === 'jump') {
+                        this.state = 'idle';
+                    }
+                }
+
+                if (this.x < 24) this.x = 24;
+                if (this.x + this.width > CANVAS_WIDTH - 24) this.x = CANVAS_WIDTH - 24 - this.width;
+            }
+
+            draw() {
+                ctx.save();
+
+                const shadowScale = Math.max(0.4, 1 - (GROUND_Y - (this.y + this.height)) / 250);
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
                 ctx.beginPath();
-                ctx.arc(f.x, f.y, 4, 0, Math.PI * 2);
+                ctx.ellipse(
+                    this.x + this.width / 2,
+                    GROUND_Y + 4,
+                    36 * shadowScale,
+                    9 * shadowScale,
+                    0, 0, Math.PI * 2
+                );
                 ctx.fill();
+
+                if (this.energy >= this.maxEnergy && this.state !== 'ko') {
+                    ctx.save();
+                    const pulse = Math.sin(this.animTick * 0.22) * 5;
+                    const auraGrad = ctx.createRadialGradient(
+                        this.x + this.width / 2, this.y + this.height / 2, 10,
+                        this.x + this.width / 2, this.y + this.height / 2, 78 + pulse
+                    );
+                    auraGrad.addColorStop(0, 'rgba(250, 204, 21, 0.38)');
+                    auraGrad.addColorStop(1, 'rgba(250, 204, 21, 0)');
+                    ctx.fillStyle = auraGrad;
+                    ctx.beginPath();
+                    ctx.arc(this.x + this.width / 2, this.y + this.height / 2, 78 + pulse, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                const isFlashing = this.state === 'hurt' && this.hurtTimer % 4 < 2;
+                const cx = this.x + this.width / 2;
+                const breath = this.state === 'idle' ? Math.sin(this.animTick * 0.12) * 2.5 : 0;
+                const walkBob = this.state === 'walk' ? Math.abs(Math.sin(this.animTick * 0.26)) * 5 : 0;
+                const lean = this.state === 'walk' ? 0.12 : 0;
+
+                ctx.translate(cx, this.y + this.height);
+                if (this.state === 'ko') {
+                    ctx.rotate(this.facing * -Math.PI / 2.2);
+                    ctx.translate(0, -25);
+                }
+                ctx.scale(this.facing, 1);
+                ctx.rotate(lean);
+
+                if (this.char.hasCape) {
+                    const capeWave = Math.sin(this.animTick * 0.18) * 8;
+                    ctx.fillStyle = isFlashing ? '#ffffff' : this.accentColor;
+                    ctx.beginPath();
+                    ctx.moveTo(-10, -96 + breath - walkBob);
+                    ctx.quadraticCurveTo(-38, -70 + capeWave, -48 - Math.abs(this.vx) * 2, -24 + capeWave);
+                    ctx.lineTo(-22, -28 + capeWave * 0.5);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                const legSwing = this.state === 'walk' ? Math.sin(this.animTick * 0.26) * 15 : 0;
+                ctx.strokeStyle = isFlashing ? '#ffffff' : this.secondaryColor;
+                ctx.lineWidth = this.char.id === 'titan' ? 16 : 13;
+                ctx.lineCap = 'round';
+
+                ctx.beginPath();
+                ctx.moveTo(-6, -54 + breath);
+                ctx.lineTo(-14 - legSwing, -6);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(6, -54 + breath);
+                if (this.state === 'attack' && this.attackType === 'kick' && this.attackFrame >= 4 && this.attackFrame <= 15) {
+                    const kickY = this.attackSubType === 'launcher_kick' ? -88 : -62;
+                    const kickX = this.attackSubType === 'spin_kick' ? 78 : 68;
+                    ctx.lineTo(kickX + this.rangeBonus * 0.5, kickY);
+                } else {
+                    ctx.lineTo(14 + legSwing, -6);
+                }
+                ctx.stroke();
+
+                const torsoW = this.char.id === 'titan' ? 48 : 40;
+                ctx.fillStyle = isFlashing ? '#ffffff' : this.primaryColor;
+                ctx.beginPath();
+                ctx.roundRect(-torsoW / 2, -100 + breath - walkBob, torsoW, 50, 9);
+                ctx.fill();
+
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+                ctx.fillRect(-torsoW / 2, -100 + breath - walkBob, torsoW * 0.35, 50);
+
+                if (this.char.id === 'titan' || this.char.id === 'lyra') {
+                    ctx.fillStyle = isFlashing ? '#ffffff' : this.accentColor;
+                    ctx.beginPath();
+                    ctx.arc(-torsoW / 2, -94 + breath - walkBob, 10, 0, Math.PI * 2);
+                    ctx.arc(torsoW / 2, -94 + breath - walkBob, 10, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.fillStyle = isFlashing ? '#ffffff' : this.accentColor;
+                ctx.fillRect(-torsoW / 2, -60 + breath - walkBob, torsoW, 8);
+
+                ctx.fillStyle = isFlashing ? '#ffffff' : this.char.skinColor;
+                ctx.beginPath();
+                ctx.arc(2, -114 + breath - walkBob, 15, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (this.char.headgear === 'hood') {
+                    ctx.fillStyle = isFlashing ? '#ffffff' : this.primaryColor;
+                    ctx.beginPath();
+                    ctx.arc(0, -115 + breath - walkBob, 17, Math.PI * 0.85, Math.PI * 2.15);
+                    ctx.fill();
+                } else if (this.char.headgear === 'visor') {
+                    ctx.fillStyle = isFlashing ? '#ffffff' : '#334155';
+                    ctx.fillRect(-14, -128 + breath - walkBob, 32, 14);
+                } else if (this.char.headgear === 'crown') {
+                    ctx.fillStyle = isFlashing ? '#ffffff' : this.accentColor;
+                    ctx.beginPath();
+                    ctx.moveTo(-12, -124 + breath - walkBob);
+                    ctx.lineTo(0, -136 + breath - walkBob);
+                    ctx.lineTo(14, -124 + breath - walkBob);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                ctx.fillStyle = isFlashing ? '#ffffff' : this.accentColor;
+                ctx.fillRect(-13, -121 + breath - walkBob, 30, 6);
+                const tailWave = Math.sin(this.animTick * 0.22) * 6;
+                ctx.beginPath();
+                ctx.moveTo(-13, -118 + breath - walkBob);
+                ctx.lineTo(-32, -113 + tailWave);
+                ctx.lineTo(-29, -105 + tailWave);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = this.glowColor;
+                ctx.shadowColor = this.glowColor;
+                ctx.shadowBlur = 8;
+                ctx.fillRect(7, -115 + breath - walkBob, 6, 3.5);
+                ctx.shadowBlur = 0;
+
+                ctx.strokeStyle = isFlashing ? '#ffffff' : this.char.skinColor;
+                ctx.lineWidth = this.char.id === 'titan' ? 12 : 10;
+                ctx.beginPath();
+                ctx.moveTo(6, -88 + breath - walkBob);
+
+                if (this.state === 'attack' && this.attackType === 'punch' && this.attackFrame >= 3 && this.attackFrame <= 11) {
+                    const punchReach = 58 + this.rangeBonus * 0.5;
+                    ctx.lineTo(punchReach, -88);
+                    ctx.stroke();
+
+                    ctx.fillStyle = this.accentColor;
+                    ctx.beginPath();
+                    ctx.arc(punchReach + 4, -88, 13, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (this.state === 'attack' && this.attackType === 'special') {
+                    ctx.lineTo(54, -76);
+                    ctx.stroke();
+
+                    ctx.fillStyle = this.glowColor;
+                    ctx.shadowColor = this.accentColor;
+                    ctx.shadowBlur = 18;
+                    ctx.beginPath();
+                    ctx.arc(58, -76, 18, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                } else {
+                    ctx.lineTo(22, -74 + breath);
+                    ctx.lineTo(28, -90 + breath);
+                    ctx.stroke();
+                }
+
+                if (this.state === 'attack' && this.attackType === 'kick' && this.attackFrame >= 5 && this.attackFrame <= 14) {
+                    const kickY = this.attackSubType === 'launcher_kick' ? -90 : -62;
+                    const kickX = this.attackSubType === 'spin_kick' ? 82 : 72;
+                    ctx.fillStyle = this.attackSubType !== 'normal' ? this.glowColor : this.accentColor;
+                    ctx.beginPath();
+                    ctx.arc(kickX + this.rangeBonus * 0.5, kickY, this.attackSubType !== 'normal' ? 20 : 15, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Escudo Visual de Defesa Ativa
+                if (this.isBlocking && this.isGrounded && this.state !== 'attack' && this.state !== 'hurt') {
+                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.75)';
+                    ctx.fillStyle = 'rgba(56, 189, 248, 0.16)';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(18, -68, 44, -Math.PI * 0.42, Math.PI * 0.42);
+                    ctx.stroke();
+                    ctx.fill();
+                }
+
+                ctx.restore();
+
+                if (gameState.showHitboxes) {
+                    const hurt = this.getHurtbox();
+                    ctx.strokeStyle = '#22c55e';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(hurt.x, hurt.y, hurt.width, hurt.height);
+
+                    const hit = this.getAttackHitbox();
+                    if (hit) {
+                        ctx.fillStyle = 'rgba(239, 68, 68, 0.35)';
+                        ctx.fillRect(hit.x, hit.y, hit.width, hit.height);
+                        ctx.strokeStyle = '#ef4444';
+                        ctx.strokeRect(hit.x, hit.y, hit.width, hit.height);
+                    }
+                }
+            }
+        }
+
+        const player1 = new Fighter({
+            x: 200,
+            facing: 1,
+            charData: CHARACTERS.kael
+        });
+
+        const player2 = new Fighter({
+            x: 760,
+            facing: -1,
+            charData: CHARACTERS.sora
+        });
+
+        /**
+         * ATIVAÇÃO E RENDERIZAÇÃO DO CUT-IN CINEMATOGRÁFICO DE SUPER
+         */
+        function triggerSuperCutIn(attacker, comboBoost = false) {
+            SoundFX.superCutIn();
+            gameState.superCutIn = {
+                active: true,
+                timer: 50,
+                maxTimer: 50,
+                attacker: attacker,
+                comboBoost: comboBoost
+            };
+        }
+
+        function executeSuperAttack(attacker, comboBoost) {
+            SoundFX.superBlast();
+            gameState.screenShake = 16;
+            gameState.flashAlpha = 0.4;
+
+            projectiles.push(new SuperProjectile({
+                x: attacker.facing === 1 ? attacker.x + attacker.width + 38 : attacker.x - 38,
+                y: attacker.y + 52,
+                direction: attacker.facing,
+                owner: attacker,
+                charData: attacker.char,
+                comboBoost: comboBoost
+            }));
+
+            shockwaves.push(new Shockwave(attacker.x + attacker.width / 2, attacker.y + 60, attacker.glowColor, 110));
+            floatingTexts.push(new FloatingText(attacker.x + attacker.width / 2, attacker.y - 26, attacker.char.superTitle, '#facc15', 1.25));
+        }
+
+        function drawSuperCutInOverlay() {
+            const cut = gameState.superCutIn;
+            if (!cut.active || !cut.attacker) return;
+
+            const char = cut.attacker.char;
+            const isP1 = cut.attacker === player1;
+            const progress = 1 - (cut.timer / cut.maxTimer);
+
+            ctx.save();
+
+            // Escurece o fundo da arena
+            ctx.fillStyle = 'rgba(4, 7, 15, 0.84)';
+            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+            // Faixa diagonal de impacto estilo anime
+            const bannerY = CANVAS_HEIGHT * 0.5;
+            ctx.save();
+            ctx.translate(CANVAS_WIDTH / 2, bannerY);
+            ctx.rotate(isP1 ? -0.06 : 0.06);
+
+            const bannerGrad = ctx.createLinearGradient(-CANVAS_WIDTH / 2, 0, CANVAS_WIDTH / 2, 0);
+            bannerGrad.addColorStop(0, '#090d16');
+            bannerGrad.addColorStop(0.5, char.primaryColor);
+            bannerGrad.addColorStop(1, char.accentColor);
+
+            ctx.fillStyle = bannerGrad;
+            ctx.fillRect(-CANVAS_WIDTH * 0.6, -108, CANVAS_WIDTH * 1.2, 216);
+
+            // Bordas brilhantes do banner
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(-CANVAS_WIDTH * 0.6, -112, CANVAS_WIDTH * 1.2, 5);
+            ctx.fillRect(-CANVAS_WIDTH * 0.6, 107, CANVAS_WIDTH * 1.2, 5);
+
+            // Linhas de velocidade (Speed Lines)
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+            ctx.lineWidth = 3;
+            for (let i = 0; i < 18; i++) {
+                const ly = -95 + i * 11;
+                const offset = ((gameState.worldTick * 42 + i * 97) % CANVAS_WIDTH) - CANVAS_WIDTH / 2;
+                ctx.beginPath();
+                ctx.moveTo(offset, ly);
+                ctx.lineTo(offset + 180, ly);
+                ctx.stroke();
+            }
+
+            // Desenha o retrato ampliado do lutador deslizando no banner
+            const slideOffset = Math.max(0, (1 - progress * 4) * 180);
+            const portraitSize = 210;
+            const px = isP1 ? -340 - slideOffset : 130 + slideOffset;
+
+            const tempPortrait = document.createElement('canvas');
+            tempPortrait.width = portraitSize;
+            tempPortrait.height = portraitSize;
+            drawCharacterPortraitToCanvas(tempPortrait, char, !isP1);
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.roundRect(px, -portraitSize / 2, portraitSize, portraitSize, 16);
+            ctx.clip();
+            ctx.drawImage(tempPortrait, px, -portraitSize / 2);
+            ctx.restore();
+
+            ctx.strokeStyle = '#fef08a';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(px, -portraitSize / 2, portraitSize, portraitSize);
+
+            // Nome do Lutador e Título do SUPER
+            const textX = isP1 ? 80 : -90;
+            ctx.textAlign = 'center';
+
+            ctx.font = 'italic 700 24px "Chakra Petch", sans-serif';
+            ctx.fillStyle = '#fef08a';
+            ctx.fillText(`${char.name} • ATAQUE SUPER`, textX, -32);
+
+            ctx.font = 'italic 800 44px "Chakra Petch", sans-serif';
+            ctx.fillStyle = '#000000';
+            ctx.fillText(char.superTitle, textX + 4, 22);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(char.superTitle, textX, 18);
+
+            if (cut.comboBoost) {
+                ctx.font = 'italic 700 20px "Chakra Petch", sans-serif';
+                ctx.fillStyle = '#38bdf8';
+                ctx.fillText('CANCELAMENTO DE COMBO!', textX, 58);
+            }
+
+            ctx.restore();
+            ctx.restore();
+        }
+
+        function spawnHitSparks(x, y, color) {
+            for (let i = 0; i < 18; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 8 + 2;
+                particles.push(new Particle({
+                    x,
+                    y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 2,
+                    color: i % 2 === 0 ? '#ffffff' : color,
+                    size: Math.random() * 4.5 + 2,
+                    life: Math.random() * 16 + 10
+                }));
+            }
+        }
+
+        function spawnDust(x, y) {
+            for (let i = 0; i < 8; i++) {
+                particles.push(new Particle({
+                    x: x + (Math.random() - 0.5) * 30,
+                    y: y - 4,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: -Math.random() * 2.5,
+                    color: '#cbd5e1',
+                    size: Math.random() * 4 + 2,
+                    life: 18
+                }));
+            }
+        }
+
+        function rectsOverlap(r1, r2) {
+            return (
+                r1.x < r2.x + r2.width &&
+                r1.x + r1.width > r2.x &&
+                r1.y < r2.y + r2.height &&
+                r1.y + r1.height > r2.y
+            );
+        }
+
+        function handleControls() {
+            player1.isBlocking = false;
+            player2.isBlocking = false;
+
+            if (player1.state === 'idle' || player1.state === 'walk' || player1.state === 'jump') {
+                if (keys['KeyA']) {
+                    player1.vx = -player1.moveSpeed;
+                    if (player1.isGrounded) player1.state = 'walk';
+                    if (player1.facing === 1) player1.isBlocking = true;
+                } else if (keys['KeyD']) {
+                    player1.vx = player1.moveSpeed;
+                    if (player1.isGrounded) player1.state = 'walk';
+                    if (player1.facing === -1) player1.isBlocking = true;
+                } else if (player1.isGrounded && player1.state === 'walk') {
+                    player1.state = 'idle';
+                }
+            }
+
+            if (!gameState.vsCPU) {
+                if (player2.state === 'idle' || player2.state === 'walk' || player2.state === 'jump') {
+                    if (keys['ArrowLeft']) {
+                        player2.vx = -player2.moveSpeed;
+                        if (player2.isGrounded) player2.state = 'walk';
+                        if (player2.facing === 1) player2.isBlocking = true;
+                    } else if (keys['ArrowRight']) {
+                        player2.vx = player2.moveSpeed;
+                        if (player2.isGrounded) player2.state = 'walk';
+                        if (player2.facing === -1) player2.isBlocking = true;
+                    } else if (player2.isGrounded && player2.state === 'walk') {
+                        player2.state = 'idle';
+                    }
+                }
+            } else {
+                updateCPU();
+            }
+        }
+
+        let cpuDecisionTimer = 0;
+        let cpuAction = 'idle';
+
+        function updateCPU() {
+            if (player2.state === 'ko' || player2.state === 'hurt') return;
+
+            const diff = DIFFICULTY_CONFIG[gameState.difficulty];
+            const dx = player1.x - player2.x;
+            const distance = Math.abs(dx);
+            const dir = dx >= 0 ? 1 : -1;
+
+            const incomingProj = projectiles.find(p => p.active && p.owner === player1 && Math.abs(p.x - player2.x) < 240);
+            if (incomingProj && player2.isGrounded && Math.random() < diff.dodgeChance * 0.15) {
+                player2.jump();
+            }
+
+            cpuDecisionTimer--;
+            if (cpuDecisionTimer <= 0) {
+                cpuDecisionTimer = Math.floor(Math.random() * (diff.reactionMax - diff.reactionMin + 1)) + diff.reactionMin;
+
+                if (player2.energy >= player2.maxEnergy && distance > 150 && Math.random() < diff.specialChance) {
+                    player2.attack('special');
+                    cpuAction = 'idle';
+                    return;
+                }
+
+                const attackRange = 105 + player2.rangeBonus;
+
+                if (distance > attackRange) {
+                    cpuAction = Math.random() < diff.aggression ? 'approach' : 'idle';
+                    if (Math.random() < 0.10 * diff.aggression) player2.jump();
+                } else {
+                    const roll = Math.random();
+                    if (roll < diff.aggression * 0.55) {
+                        player2.attack('punch');
+                        // Tenta encadear combo se acertar em dificuldades maiores
+                        if (Math.random() < diff.aggression * 0.6) {
+                            setTimeout(() => { if (gameState.status === 'playing' && !gameState.superCutIn.active) player2.attack('punch'); }, 190);
+                            setTimeout(() => { if (gameState.status === 'playing' && !gameState.superCutIn.active) player2.attack('kick'); }, 380);
+                        }
+                        cpuAction = 'idle';
+                    } else if (roll < diff.aggression * 0.92) {
+                        player2.attack('kick');
+                        cpuAction = 'idle';
+                    } else {
+                        cpuAction = 'retreat';
+                    }
+                }
+            }
+
+            if (player2.state === 'idle' || player2.state === 'walk' || player2.state === 'jump') {
+                const spd = player2.moveSpeed * diff.speedScale;
+                if (cpuAction === 'approach') {
+                    player2.vx = dir * spd;
+                    if (player2.isGrounded) player2.state = 'walk';
+                } else if (cpuAction === 'retreat') {
+                    player2.vx = -dir * (spd * 0.85);
+                    if (player2.isGrounded) player2.state = 'walk';
+                    if (player2.facing === dir) player2.isBlocking = true;
+                } else if (player2.isGrounded && player2.state === 'walk') {
+                    player2.state = 'idle';
+                }
+            }
+        }
+
+        function checkCombatCollisions() {
+            const p1Hit = player1.getAttackHitbox();
+            if (p1Hit && rectsOverlap(p1Hit, player2.getHurtbox())) {
+                player1.hasHitThisAttack = true;
+                player1.energy = Math.min(player1.maxEnergy, player1.energy + p1Hit.energyGain);
+
+                if (player1.attackType === 'kick') SoundFX.kick();
+                else SoundFX.punch();
+
+                const landed = player2.takeDamage(
+                    p1Hit.damage, p1Hit.knockbackX, p1Hit.knockbackY,
+                    p1Hit.x + p1Hit.width / 2, p1Hit.y + p1Hit.height / 2
+                );
+                if (landed) {
+                    player1.registerAttackSuccess(p1Hit.moveLabel, p1Hit.damage, p1Hit.isFinisher);
+                }
+            }
+
+            const p2Hit = player2.getAttackHitbox();
+            if (p2Hit && rectsOverlap(p2Hit, player1.getHurtbox())) {
+                player2.hasHitThisAttack = true;
+                player2.energy = Math.min(player2.maxEnergy, player2.energy + p2Hit.energyGain);
+
+                if (player2.attackType === 'kick') SoundFX.kick();
+                else SoundFX.punch();
+
+                const landed = player1.takeDamage(
+                    p2Hit.damage, p2Hit.knockbackX, p2Hit.knockbackY,
+                    p2Hit.x + p2Hit.width / 2, p2Hit.y + p2Hit.height / 2
+                );
+                if (landed) {
+                    player2.registerAttackSuccess(p2Hit.moveLabel, p2Hit.damage, p2Hit.isFinisher);
+                }
+            }
+
+            // Colisão dos Mega Projéteis de Super (Multi-Hit)
+            projectiles.forEach(proj => {
+                if (!proj.active || proj.hitCooldown > 0) return;
+                const target = proj.owner === player1 ? player2 : player1;
+                if (rectsOverlap(proj.getHitbox(), target.getHurtbox())) {
+                    proj.hitsRemaining--;
+                    proj.hitCooldown = 6;
+                    if (proj.hitsRemaining <= 0) proj.active = false;
+
+                    SoundFX.kick();
+                    const isLastHit = proj.hitsRemaining <= 0;
+                    const landed = target.takeDamage(
+                        proj.damagePerHit,
+                        Math.sign(proj.vx) * (isLastHit ? 14 : 3.5),
+                        isLastHit ? -6.5 : -1.5,
+                        proj.x,
+                        proj.y
+                    );
+                    if (landed) {
+                        proj.owner.comboCount++;
+                        proj.owner.comboDamage += proj.damagePerHit;
+                        proj.owner.comboName = proj.owner.char.superTitle;
+                        proj.owner.comboTimer = proj.owner.maxComboTimer;
+                    }
+                }
             });
 
-            // 2. Gramado Retrô (Linhas Horizontais estilo Flash Classic)
-            const stripeHeight = 25;
-            for (let y = 100; y < canvas.height; y += stripeHeight) {
-                ctx.fillStyle = (Math.floor(y / stripeHeight) % 2 === 0) ? '#4CAF50' : '#43A047';
-                ctx.fillRect(0, y, canvas.width, stripeHeight);
-            }
-
-            // Linhas de Demarcação do Campo
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.lineWidth = 4;
-            // Linha da Grande Área
-            ctx.beginPath();
-            ctx.moveTo(100, 260);
-            ctx.lineTo(700, 260);
-            ctx.stroke();
-
-            // Linha de Fundo
-            ctx.beginPath();
-            ctx.moveTo(0, 260);
-            ctx.lineTo(canvas.width, 260);
-            ctx.stroke();
-
-            // Marca do Pênalti
-            ctx.fillStyle = '#fff';
-            ctx.beginPath();
-            ctx.arc(400, 410, 4, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 3. Trave e Rede 2D
-            // Desenho da Rede
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-            ctx.lineWidth = 1;
-            const netCols = 20;
-            const netRows = 10;
-            const colW = GOAL.w / netCols;
-            const rowH = GOAL.h / netRows;
-
-            for(let r = 0; r <= netRows; r++) {
-                ctx.beginPath();
-                for(let c = 0; c <= netCols; c++) {
-                    const offset = netOffset[c] ? netOffset[c].y : 0;
-                    const nx = GOAL.x + c * colW;
-                    const ny = GOAL.y + r * rowH + (r > 0 ? offset : 0);
-                    if (c === 0) ctx.moveTo(nx, ny);
-                    else ctx.lineTo(nx, ny);
+            if (player1.isGrounded && player2.isGrounded) {
+                const overlapX = (player1.width / 2 + player2.width / 2) - Math.abs((player1.x + player1.width / 2) - (player2.x + player2.width / 2));
+                if (overlapX > 0 && Math.abs(player1.y - player2.y) < 60) {
+                    const push = overlapX * 0.25;
+                    if (player1.x < player2.x) {
+                        player1.x -= push;
+                        player2.x += push;
+                    } else {
+                        player1.x += push;
+                        player2.x -= push;
+                    }
                 }
-                ctx.stroke();
             }
-            for(let c = 0; c <= netCols; c++) {
-                ctx.beginPath();
-                const offset = netOffset[c] ? netOffset[c].y : 0;
-                ctx.moveTo(GOAL.x + c * colW, GOAL.y);
-                ctx.lineTo(GOAL.x + c * colW, GOAL.y + GOAL.h + offset);
-                ctx.stroke();
-            }
-
-            // Estrutura Branca da Trave (Postes e Travessão)
-            ctx.strokeStyle = '#FFFFFF';
-            ctx.lineWidth = GOAL.postWidth;
-            ctx.lineJoin = 'miter';
-            ctx.beginPath();
-            ctx.moveTo(GOAL.x, GOAL.y + GOAL.h);
-            ctx.lineTo(GOAL.x, GOAL.y);
-            ctx.lineTo(GOAL.x + GOAL.w, GOAL.y);
-            ctx.lineTo(GOAL.x + GOAL.w, GOAL.y + GOAL.h);
-            ctx.stroke();
-
-            // Sombra dos Postes
-            ctx.strokeStyle = 'rgba(0,0,0,0.2)';
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.moveTo(GOAL.x + 6, GOAL.y + GOAL.h);
-            ctx.lineTo(GOAL.x + 6, GOAL.y + 6);
-            ctx.lineTo(GOAL.x + GOAL.w - 6, GOAL.y + 6);
-            ctx.stroke();
-
-            // 4. Desenhar Goleiro (Com Anatomia e Luvas)
-            drawKeeper();
-
-            // 5. Mira Clássica Verde Flash com Setas
-            if (gameState === 'AIMING' || gameState === 'POWERING') {
-                drawClassicAim(target.x, target.y);
-            }
-
-            // 6. Desenhar Cobrador (Visto de Costas com Número na Camisa)
-            drawKicker();
-
-            // 7. Desenhar Bola com Rotação e Sombra 2.5D
-            drawBall();
         }
 
-        // MIRA VERDE CLÁSSICA FLASH COM SETAS
-        function drawClassicAim(x, y) {
-            ctx.save();
-            ctx.translate(x, y);
+        function updateHUD() {
+            const p1Pct = (player1.health / player1.maxHealth) * 100;
+            const p2Pct = (player2.health / player2.maxHealth) * 100;
 
-            // Círculo Verde Central Interno
-            ctx.fillStyle = 'rgba(76, 175, 80, 0.6)';
-            ctx.beginPath();
-            ctx.arc(0, 0, 16, 0, Math.PI * 2);
-            ctx.fill();
+            document.getElementById('p1HealthBar').style.width = `${p1Pct}%`;
+            document.getElementById('p1DamageBar').style.width = `${p1Pct}%`;
 
-            // Borda Verde Externa
-            ctx.strokeStyle = '#4CAF50';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.arc(0, 0, 16, 0, Math.PI * 2);
-            ctx.stroke();
+            document.getElementById('p2HealthBar').style.width = `${p2Pct}%`;
+            document.getElementById('p2DamageBar').style.width = `${p2Pct}%`;
 
-            // Setas Brancas Indicadoras (Cima, Baixo, Esquerda, Direita)
-            ctx.fillStyle = '#FFFFFF';
-            const arrowDist = 22;
-            const size = 6;
+            const p1EnergyEl = document.getElementById('p1EnergyBar');
+            const p2EnergyEl = document.getElementById('p2EnergyBar');
 
-            // Seta Cima
-            ctx.beginPath();
-            ctx.moveTo(0, -arrowDist);
-            ctx.lineTo(-size, -arrowDist - size);
-            ctx.lineTo(size, -arrowDist - size);
-            ctx.fill();
+            p1EnergyEl.style.width = `${player1.energy}%`;
+            p2EnergyEl.style.width = `${player2.energy}%`;
 
-            // Seta Baixo
-            ctx.beginPath();
-            ctx.moveTo(0, arrowDist);
-            ctx.lineTo(-size, arrowDist + size);
-            ctx.lineTo(size, arrowDist + size);
-            ctx.fill();
+            p1EnergyEl.classList.toggle('ready', player1.energy >= player1.maxEnergy);
+            p2EnergyEl.classList.toggle('ready', player2.energy >= player2.maxEnergy);
 
-            // Seta Esquerda
-            ctx.beginPath();
-            ctx.moveTo(-arrowDist, 0);
-            ctx.lineTo(-arrowDist - size, -size);
-            ctx.lineTo(-arrowDist - size, size);
-            ctx.fill();
-
-            // Seta Direita
-            ctx.beginPath();
-            ctx.moveTo(arrowDist, 0);
-            ctx.lineTo(arrowDist + size, -size);
-            ctx.lineTo(arrowDist + size, size);
-            ctx.fill();
-
-            ctx.restore();
+            // Atualiza displays de Combo do Jogador 1 e Jogador 2
+            updateComboDisplay('p1', player1);
+            updateComboDisplay('p2', player2);
         }
 
-        // DESENHO DO GOLEIRO
-        function drawKeeper() {
-            const teamKey = currentTurn === 1 ? p2Team : p1Team;
-            const team = TEAMS[teamKey];
-
-            ctx.save();
-            ctx.translate(keeper.x, keeper.y);
-
-            // Sombra
-            ctx.fillStyle = 'rgba(0,0,0,0.3)';
-            ctx.beginPath();
-            ctx.ellipse(0, 20, 20, 6, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Pernas
-            ctx.fillStyle = team.shorts;
-            ctx.fillRect(-12, 0, 8, 16);
-            ctx.fillRect(4, 0, 8, 16);
-
-            // Meias / Chuteiras
-            ctx.fillStyle = team.socks;
-            ctx.fillRect(-12, 16, 8, 10);
-            ctx.fillRect(4, 16, 8, 10);
-
-            // Tronco (Camisa do Goleiro)
-            ctx.fillStyle = team.keeper;
-            ctx.fillRect(-15, -25, 30, 25);
-
-            // Cabeça
-            ctx.fillStyle = '#ffcc99';
-            ctx.beginPath();
-            ctx.arc(0, -32, 8, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Cabelo
-            ctx.fillStyle = '#4a2e00';
-            ctx.beginPath();
-            ctx.arc(0, -35, 8, Math.PI, Math.PI * 2);
-            ctx.fill();
-
-            // Braços e Luvas
-            ctx.fillStyle = team.keeper;
-            if (keeper.state === 'DIVING') {
-                // Braços Esticados no Salto
-                ctx.fillRect(-28, -25, 14, 8);
-                ctx.fillRect(14, -25, 14, 8);
-
-                // Luvas Grandes
-                ctx.fillStyle = '#FFFFFF';
-                ctx.beginPath();
-                ctx.arc(-32, -21, 7, 0, Math.PI * 2);
-                ctx.arc(32, -21, 7, 0, Math.PI * 2);
-                ctx.fill();
+        function updateComboDisplay(prefix, fighter) {
+            const box = document.getElementById(`${prefix}ComboDisplay`);
+            if (fighter.comboCount >= 2 && fighter.comboTimer > 0) {
+                box.classList.add('active');
+                document.getElementById(`${prefix}ComboHits`).textContent = `${fighter.comboCount} HITS!`;
+                document.getElementById(`${prefix}ComboName`).textContent = fighter.comboName;
+                document.getElementById(`${prefix}ComboDmg`).textContent = `${fighter.comboDamage} DANO TOTAL`;
+                document.getElementById(`${prefix}ComboTimer`).style.width = `${(fighter.comboTimer / fighter.maxComboTimer) * 100}%`;
             } else {
-                // Postura Normal de Espera
-                ctx.fillRect(-22, -20, 8, 15);
-                ctx.fillRect(14, -20, 8, 15);
+                box.classList.remove('active');
+            }
+        }
 
-                // Luvas
-                ctx.fillStyle = '#FFFFFF';
+        function updateHudAvatars() {
+            drawCharacterPortraitToCanvas(document.getElementById('p1HudAvatar'), CHARACTERS[gameState.p1CharId], false);
+            drawCharacterPortraitToCanvas(document.getElementById('p2HudAvatar'), CHARACTERS[gameState.p2CharId], true);
+        }
+
+        function drawArenaBackground() {
+            const st = STAGES[gameState.stageId];
+            gameState.worldTick++;
+
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+            skyGrad.addColorStop(0, st.skyTop);
+            skyGrad.addColorStop(0.55, st.skyMid);
+            skyGrad.addColorStop(1, st.skyBottom);
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, CANVAS_WIDTH, GROUND_Y);
+
+            if (st.id === 'dojo') {
+                ctx.save();
+                ctx.fillStyle = '#fde047';
+                ctx.shadowColor = '#f97316';
+                ctx.shadowBlur = 50;
                 ctx.beginPath();
-                ctx.arc(-18, -2, 6, 0, Math.PI * 2);
-                ctx.arc(18, -2, 6, 0, Math.PI * 2);
+                ctx.arc(CANVAS_WIDTH * 0.5, 220, 92, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                ctx.fillStyle = '#431407';
+                ctx.beginPath();
+                ctx.moveTo(0, GROUND_Y);
+                ctx.lineTo(220, 260);
+                ctx.lineTo(440, GROUND_Y);
+                ctx.lineTo(680, 240);
+                ctx.lineTo(920, GROUND_Y);
+                ctx.lineTo(1024, 310);
+                ctx.lineTo(1024, GROUND_Y);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = '#290d06';
+                ctx.fillRect(100, 165, 34, GROUND_Y - 165);
+                ctx.fillRect(890, 165, 34, GROUND_Y - 165);
+                ctx.fillRect(60, 150, 904, 22);
+
+                const swing = Math.sin(gameState.worldTick * 0.04) * 4;
+                drawLantern(117 + swing, 215, '#fb923c');
+                drawLantern(907 + swing, 215, '#fb923c');
+
+            } else if (st.id === 'cyberpunk') {
+                ctx.save();
+                ctx.fillStyle = '#e879f9';
+                ctx.shadowColor = '#c026d3';
+                ctx.shadowBlur = 35;
+                ctx.beginPath();
+                ctx.arc(820, 120, 48, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                const buildings = [
+                    { x: 40, w: 120, h: 310 }, { x: 180, w: 150, h: 360 },
+                    { x: 360, w: 110, h: 270 }, { x: 510, w: 160, h: 380 },
+                    { x: 700, w: 130, h: 300 }, { x: 860, w: 130, h: 340 }
+                ];
+                buildings.forEach((b, idx) => {
+                    ctx.fillStyle = '#090d16';
+                    ctx.fillRect(b.x, GROUND_Y - b.h, b.w, b.h);
+                    ctx.fillStyle = idx % 2 === 0 ? '#06b6d4' : '#ec4899';
+                    ctx.fillRect(b.x + 16, GROUND_Y - b.h + 30, 14, 70);
+                    ctx.fillStyle = 'rgba(56, 189, 248, 0.25)';
+                    ctx.fillRect(b.x + 45, GROUND_Y - b.h + 25, b.w - 60, b.h - 50);
+                });
+
+                flyingCars.forEach(car => {
+                    car.x += car.vx;
+                    if (car.x > CANVAS_WIDTH + 60) car.x = -60;
+                    if (car.x < -60) car.x = CANVAS_WIDTH + 60;
+                    ctx.save();
+                    ctx.fillStyle = car.color;
+                    ctx.shadowColor = car.color;
+                    ctx.shadowBlur = 12;
+                    ctx.fillRect(car.x, car.y, 26, 6);
+                    ctx.restore();
+                });
+
+            } else if (st.id === 'volcano') {
+                ctx.fillStyle = '#1c0707';
+                ctx.beginPath();
+                ctx.moveTo(150, GROUND_Y);
+                ctx.lineTo(430, 170);
+                ctx.lineTo(594, 170);
+                ctx.lineTo(874, GROUND_Y);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.save();
+                ctx.fillStyle = '#f97316';
+                ctx.shadowColor = '#ef4444';
+                ctx.shadowBlur = 35;
+                ctx.beginPath();
+                ctx.ellipse(512, 172, 82, 16, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.strokeStyle = '#ea580c';
+                ctx.lineWidth = 10;
+                ctx.beginPath();
+                ctx.moveTo(490, 180);
+                ctx.quadraticCurveTo(440, 320, 390, GROUND_Y);
+                ctx.moveTo(540, 180);
+                ctx.quadraticCurveTo(590, 330, 650, GROUND_Y);
+                ctx.stroke();
+                ctx.restore();
+
+                ctx.fillStyle = '#291515';
+                ctx.fillRect(90, 240, 44, GROUND_Y - 240);
+                ctx.fillRect(890, 270, 44, GROUND_Y - 270);
+
+            } else if (st.id === 'snow') {
+                ctx.save();
+                const wave = Math.sin(gameState.worldTick * 0.025) * 28;
+                const auroraGrad = ctx.createLinearGradient(0, 40, CANVAS_WIDTH, 200);
+                auroraGrad.addColorStop(0, 'rgba(16, 185, 129, 0)');
+                auroraGrad.addColorStop(0.35, 'rgba(52, 211, 153, 0.35)');
+                auroraGrad.addColorStop(0.7, 'rgba(56, 189, 248, 0.35)');
+                auroraGrad.addColorStop(1, 'rgba(168, 85, 247, 0)');
+                ctx.fillStyle = auroraGrad;
+                ctx.beginPath();
+                ctx.moveTo(0, 130);
+                ctx.quadraticCurveTo(350, 50 + wave, 680, 140 - wave);
+                ctx.lineTo(1024, 90);
+                ctx.lineTo(1024, 210);
+                ctx.quadraticCurveTo(680, 250 - wave, 350, 160 + wave);
+                ctx.lineTo(0, 220);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+
+                ctx.fillStyle = '#1e293b';
+                ctx.beginPath();
+                ctx.moveTo(0, GROUND_Y);
+                ctx.lineTo(240, 210);
+                ctx.lineTo(500, GROUND_Y);
+                ctx.lineTo(760, 190);
+                ctx.lineTo(1024, GROUND_Y);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = '#e2e8f0';
+                ctx.beginPath();
+                ctx.moveTo(240, 210);
+                ctx.lineTo(185, 275);
+                ctx.lineTo(240, 260);
+                ctx.lineTo(295, 275);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(760, 190);
+                ctx.lineTo(700, 265);
+                ctx.lineTo(760, 248);
+                ctx.lineTo(820, 265);
+                ctx.closePath();
                 ctx.fill();
             }
 
-            ctx.restore();
+            ambientParticles.forEach(p => {
+                p.phase += 0.04;
+                if (st.particleType === 'sakura') {
+                    p.x += Math.sin(p.phase) * 1.2 - 0.6;
+                    p.y += p.speedY * 0.7;
+                    ctx.fillStyle = 'rgba(251, 207, 232, 0.8)';
+                    ctx.beginPath();
+                    ctx.ellipse(p.x, p.y, p.size, p.size * 0.6, p.phase, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (st.particleType === 'rain') {
+                    p.x -= 2.5;
+                    p.y += 14;
+                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p.x - 3, p.y + 14);
+                    ctx.stroke();
+                } else if (st.particleType === 'embers') {
+                    p.x += Math.sin(p.phase) * 1.5;
+                    p.y -= p.speedY * 1.2;
+                    ctx.fillStyle = 'rgba(251, 146, 60, 0.85)';
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size * 0.7, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (st.particleType === 'snow') {
+                    p.x += Math.sin(p.phase) * 0.9;
+                    p.y += p.speedY * 0.8;
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size * 0.8, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                if (p.y > GROUND_Y) { p.y = -10; p.x = Math.random() * CANVAS_WIDTH; }
+                if (p.y < -15) { p.y = GROUND_Y; p.x = Math.random() * CANVAS_WIDTH; }
+                if (p.x < 0) p.x = CANVAS_WIDTH;
+                if (p.x > CANVAS_WIDTH) p.x = 0;
+            });
+
+            const floorGrad = ctx.createLinearGradient(0, GROUND_Y, 0, CANVAS_HEIGHT);
+            floorGrad.addColorStop(0, st.floorTop);
+            floorGrad.addColorStop(1, st.floorBottom);
+            ctx.fillStyle = floorGrad;
+            ctx.fillRect(0, GROUND_Y, CANVAS_WIDTH, CANVAS_HEIGHT - GROUND_Y);
+
+            ctx.fillStyle = st.trimColor;
+            ctx.fillRect(0, GROUND_Y, CANVAS_WIDTH, 3);
         }
 
-        // DESENHO DO COBRADOR (COSTAS COM NÚMERO)
-        function drawKicker() {
-            const teamKey = currentTurn === 1 ? p1Team : p2Team;
-            const team = TEAMS[teamKey];
-
+        function drawLantern(x, y, color) {
             ctx.save();
-            ctx.translate(kicker.x, kicker.y);
-
-            // Sombra no Chão
-            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.strokeStyle = '#78350f';
+            ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.ellipse(0, 15, 18, 6, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Pernas
-            ctx.fillStyle = team.shorts;
-            ctx.fillRect(-10, -10, 8, 16);
-            ctx.fillRect(2, -10, 8, 16);
-
-            // Chuteiras
-            ctx.fillStyle = '#111';
-            ctx.fillRect(-10, 6, 8, 8);
-            ctx.fillRect(2, 6, 8, 8);
-
-            // Camisa (Costas)
-            ctx.fillStyle = team.shirt;
-            ctx.fillRect(-14, -40, 28, 30);
-
-            // Listras se houver (Ex: Argentina)
-            if (team.stripes) {
-                ctx.fillStyle = team.stripeColor;
-                ctx.fillRect(-10, -40, 6, 30);
-                ctx.fillRect(4, -40, 6, 30);
-            }
-
-            // NÚMERO NAS COSTAS (Estilo Clássico)
-            ctx.fillStyle = team.shirt === '#FFFFFF' ? '#000000' : '#FFFFFF';
-            ctx.font = 'bold 16px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('10', 0, -20);
-
-            // Cabeça (Visto de Costas)
-            ctx.fillStyle = '#4a2e00';
-            ctx.beginPath();
-            ctx.arc(0, -46, 9, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Braços
-            ctx.fillStyle = team.shirt;
-            ctx.fillRect(-20, -38, 7, 18);
-            ctx.fillRect(13, -38, 7, 18);
-
-            // Mãos
-            ctx.fillStyle = '#ffcc99';
-            ctx.beginPath();
-            ctx.arc(-16.5, -18, 4, 0, Math.PI * 2);
-            ctx.arc(16.5, -18, 4, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.restore();
-        }
-
-        // DESENHO DA BOLA
-        function drawBall() {
-            ctx.save();
-            const currentRadius = Math.max(5, ball.radius - (ball.y < 260 ? (410 - ball.y) * 0.015 : 0));
-
-            // Sombra Projetada no Chão
-            ctx.fillStyle = 'rgba(0,0,0,0.3)';
-            ctx.beginPath();
-            ctx.ellipse(ball.x, ball.y + currentRadius - 2, currentRadius, currentRadius * 0.4, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Corpo da Bola (Com Elevação Z)
-            const drawY = ball.y - ball.z;
-            ctx.translate(ball.x, drawY);
-            ctx.rotate(ball.rotation);
-
-            ctx.fillStyle = '#FFFFFF';
-            ctx.beginPath();
-            ctx.arc(0, 0, currentRadius, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 1.5;
+            ctx.moveTo(x, 172);
+            ctx.lineTo(x, y);
             ctx.stroke();
 
-            // Gomos Pretos da Bola Tradicional
-            ctx.fillStyle = '#000000';
-            for (let i = 0; i < 5; i++) {
-                const angle = (i * Math.PI * 2) / 5;
-                const gx = Math.cos(angle) * (currentRadius * 0.5);
-                const gy = Math.sin(angle) * (currentRadius * 0.5);
-                ctx.beginPath();
-                ctx.arc(gx, gy, currentRadius * 0.25, 0, Math.PI * 2);
-                ctx.fill();
+            ctx.fillStyle = color;
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 18;
+            ctx.beginPath();
+            ctx.roundRect(x - 10, y, 20, 28, 6);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function renderSelectionUI() {
+            const p1Grid = document.getElementById('p1CharGrid');
+            const p2Grid = document.getElementById('p2CharGrid');
+            const stageGrid = document.getElementById('stageGrid');
+
+            p1Grid.innerHTML = '';
+            p2Grid.innerHTML = '';
+            stageGrid.innerHTML = '';
+
+            Object.values(CHARACTERS).forEach(char => {
+                const portraitSrc = generatePortraitDataURL(char.id);
+
+                const card1 = document.createElement('div');
+                card1.className = `char-card ${gameState.p1CharId === char.id ? 'selected-p1' : ''}`;
+                card1.innerHTML = `
+                    <img class="char-portrait-thumb" src="${portraitSrc}" alt="${char.name}">
+                    <span class="char-card-name">${char.name}</span>
+                    <span class="char-card-role">${char.title}</span>
+                `;
+                card1.onclick = () => {
+                    SoundFX.select();
+                    gameState.p1CharId = char.id;
+                    player1.applyCharacter(char);
+                    updateHudAvatars();
+                    renderSelectionUI();
+                };
+                p1Grid.appendChild(card1);
+
+                const card2 = document.createElement('div');
+                card2.className = `char-card ${gameState.p2CharId === char.id ? 'selected-p2' : ''}`;
+                card2.innerHTML = `
+                    <img class="char-portrait-thumb" src="${portraitSrc}" alt="${char.name}">
+                    <span class="char-card-name">${char.name}</span>
+                    <span class="char-card-role">${char.title}</span>
+                `;
+                card2.onclick = () => {
+                    SoundFX.select();
+                    gameState.p2CharId = char.id;
+                    player2.applyCharacter(char);
+                    updateHudAvatars();
+                    renderSelectionUI();
+                };
+                p2Grid.appendChild(card2);
+            });
+
+            renderStatsBox('p1StatsBox', CHARACTERS[gameState.p1CharId], '#38bdf8');
+            renderStatsBox('p2StatsBox', CHARACTERS[gameState.p2CharId], '#fb7185');
+
+            Object.values(STAGES).forEach(st => {
+                const thumbSrc = generateStageThumbDataURL(st.id);
+                const sCard = document.createElement('div');
+                sCard.className = `stage-card ${gameState.stageId === st.id ? 'active' : ''}`;
+                sCard.innerHTML = `
+                    <img class="stage-thumb-img" src="${thumbSrc}" alt="${st.name}">
+                    <div class="stage-card-info">
+                        <div class="stage-card-title">${st.name}</div>
+                        <div class="stage-card-sub">${st.subtitle}</div>
+                    </div>
+                `;
+                sCard.onclick = () => {
+                    SoundFX.select();
+                    gameState.stageId = st.id;
+                    initAmbientEffects();
+                    renderSelectionUI();
+                };
+                stageGrid.appendChild(sCard);
+            });
+        }
+
+        function renderStatsBox(elementId, charData, barColor) {
+            const box = document.getElementById(elementId);
+            box.innerHTML = `
+                <div style="font-weight: 700; color: #facc15; margin-bottom: 2px;">SUPER: ${charData.superTitle}</div>
+                <div class="stat-row"><span>Vel.</span><div class="stat-track"><div class="stat-fill" style="width:${charData.stats.vel}%; background:${barColor};"></div></div></div>
+                <div class="stat-row"><span>Força</span><div class="stat-track"><div class="stat-fill" style="width:${charData.stats.forca}%; background:${barColor};"></div></div></div>
+                <div class="stat-row"><span>Alcance</span><div class="stat-track"><div class="stat-fill" style="width:${charData.stats.alcance}%; background:${barColor};"></div></div></div>
+            `;
+        }
+
+        function openCharacterSelect(vsCPU) {
+            SoundFX.select();
+            gameState.vsCPU = vsCPU;
+            gameState.status = 'select';
+
+            document.getElementById('p2SelectTitle').textContent = vsCPU
+                ? `Oponente (CPU • ${DIFFICULTY_CONFIG[gameState.difficulty].label})`
+                : 'Jogador 2 (Local)';
+
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameOverScreen').classList.add('hidden');
+            document.getElementById('selectScreen').classList.remove('hidden');
+            renderSelectionUI();
+        }
+
+        function startMatch() {
+            SoundFX.select();
+            gameState.status = 'playing';
+            gameState.timer = 60;
+            gameState.announcement = 'LUTEM!';
+            gameState.announcementTimer = 55;
+            gameState.superCutIn.active = false;
+
+            const c1 = CHARACTERS[gameState.p1CharId];
+            const c2 = CHARACTERS[gameState.p2CharId];
+            player1.applyCharacter(c1);
+            player2.applyCharacter(c2);
+            updateHudAvatars();
+
+            document.getElementById('p1HudName').textContent = `${c1.name} (J1)`;
+            document.getElementById('p2HudName').textContent = `${c2.name} (J2)`;
+            document.getElementById('p2ModeBadge').textContent = gameState.vsCPU
+                ? `CPU • ${DIFFICULTY_CONFIG[gameState.difficulty].label}`
+                : 'HUMANO';
+
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('selectScreen').classList.add('hidden');
+            document.getElementById('gameOverScreen').classList.add('hidden');
+            document.getElementById('movesModal').classList.add('hidden');
+
+            const timerEl = document.getElementById('timerDisplay');
+            timerEl.textContent = gameState.timer;
+            timerEl.classList.remove('low-time');
+
+            player1.reset();
+            player2.reset();
+            particles = [];
+            shockwaves = [];
+            afterimages = [];
+            projectiles = [];
+            floatingTexts = [];
+            updateHUD();
+
+            clearInterval(gameState.timerInterval);
+            gameState.timerInterval = setInterval(() => {
+                if (gameState.status !== 'playing' || gameState.superCutIn.active) return;
+
+                gameState.timer--;
+                timerEl.textContent = gameState.timer;
+                if (gameState.timer <= 10) {
+                    timerEl.classList.add('low-time');
+                }
+
+                if (gameState.timer <= 0) {
+                    endMatch('time');
+                }
+            }, 1000);
+        }
+
+        function endMatch(reason) {
+            if (gameState.status === 'gameover') return;
+            gameState.status = 'gameover';
+            clearInterval(gameState.timerInterval);
+
+            const titleEl = document.getElementById('winnerTitle');
+            const subEl = document.getElementById('winnerSubtitle');
+
+            const p1Ratio = player1.health / player1.maxHealth;
+            const p2Ratio = player2.health / player2.maxHealth;
+
+            if (p1Ratio > p2Ratio) {
+                titleEl.textContent = `JOGADOR 1 (${player1.name}) VENCEU!`;
+                titleEl.style.color = '#38bdf8';
+                subEl.textContent = reason === 'ko' ? 'Vitória espetacular por Nocaute!' : 'Vitória por maior porcentagem de vida!';
+            } else if (p2Ratio > p1Ratio) {
+                titleEl.textContent = gameState.vsCPU
+                    ? `CPU (${player2.name}) VENCEU!`
+                    : `JOGADOR 2 (${player2.name}) VENCEU!`;
+                titleEl.style.color = '#fb7185';
+                subEl.textContent = reason === 'ko' ? 'Vitória espetacular por Nocaute!' : 'Vitória por maior porcentagem de vida!';
+            } else {
+                titleEl.textContent = 'EMPATE!';
+                titleEl.style.color = '#facc15';
+                subEl.textContent = 'Ambos os lutadores terminaram em igualdade!';
+            }
+
+            setTimeout(() => {
+                document.getElementById('gameOverScreen').classList.remove('hidden');
+            }, 750);
+        }
+
+        function gameLoop() {
+            requestAnimationFrame(gameLoop);
+
+            // Animação Cinematográfica de Cut-in do SUPER congela a ação da arena brevemente
+            if (gameState.superCutIn.active) {
+                gameState.worldTick++;
+                drawArenaBackground();
+                player1.draw();
+                player2.draw();
+                drawSuperCutInOverlay();
+
+                gameState.superCutIn.timer--;
+                if (gameState.superCutIn.timer <= 0) {
+                    const attacker = gameState.superCutIn.attacker;
+                    const boost = gameState.superCutIn.comboBoost;
+                    gameState.superCutIn.active = false;
+                    executeSuperAttack(attacker, boost);
+                }
+                return;
+            }
+
+            if (gameState.hitStop > 0) {
+                gameState.hitStop--;
+                return;
+            }
+
+            ctx.save();
+
+            if (gameState.screenShake > 0) {
+                const sx = (Math.random() - 0.5) * gameState.screenShake * 1.6;
+                const sy = (Math.random() - 0.5) * gameState.screenShake * 1.6;
+                ctx.translate(sx, sy);
+                gameState.screenShake *= 0.82;
+                if (gameState.screenShake < 0.4) gameState.screenShake = 0;
+            }
+
+            drawArenaBackground();
+
+            if (gameState.status === 'playing') {
+                handleControls();
+                player1.update(player2);
+                player2.update(player1);
+                checkCombatCollisions();
+                updateHUD();
+
+                if (player1.health <= 0 || player2.health <= 0) {
+                    endMatch('ko');
+                }
+            } else if (gameState.status === 'gameover') {
+                player1.update(player2);
+                player2.update(player1);
+            }
+
+            afterimages = afterimages.filter(a => a.life > 0);
+            afterimages.forEach(a => { a.update(); a.draw(); });
+
+            projectiles = projectiles.filter(p => p.active);
+            projectiles.forEach(p => { p.update(); p.draw(); });
+
+            if (gameState.status === 'select' || gameState.status === 'menu') {
+                player1.animTick++;
+                player2.animTick++;
+            }
+            player1.draw();
+            player2.draw();
+
+            shockwaves = shockwaves.filter(s => s.life > 0);
+            shockwaves.forEach(s => { s.update(); s.draw(); });
+
+            particles = particles.filter(p => p.life > 0);
+            particles.forEach(p => { p.update(); p.draw(); });
+
+            floatingTexts = floatingTexts.filter(t => t.life > 0);
+            floatingTexts.forEach(t => { t.update(); t.draw(); });
+
+            if (gameState.flashAlpha > 0) {
+                ctx.fillStyle = `rgba(255, 255, 255, ${gameState.flashAlpha})`;
+                ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+                gameState.flashAlpha *= 0.72;
+                if (gameState.flashAlpha < 0.02) gameState.flashAlpha = 0;
+            }
+
+            if (gameState.announcementTimer > 0) {
+                gameState.announcementTimer--;
+                ctx.save();
+                ctx.globalAlpha = Math.min(1, gameState.announcementTimer / 15);
+                ctx.font = 'italic 800 72px "Chakra Petch", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#000';
+                ctx.fillText(gameState.announcement, CANVAS_WIDTH / 2 + 4, CANVAS_HEIGHT / 2 + 4);
+                ctx.fillStyle = '#facc15';
+                ctx.fillText(gameState.announcement, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+                ctx.restore();
             }
 
             ctx.restore();
         }
 
-        // LOOP PRINCIPAL DO JOGO
-        function gameLoop() {
-            update();
-            draw();
-            requestAnimationFrame(gameLoop);
-        }
+        document.querySelectorAll('.diff-pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                SoundFX.select();
+                document.querySelectorAll('.diff-pill').forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                gameState.difficulty = pill.getAttribute('data-diff');
+            });
+        });
 
-        // Iniciar Loop
-        gameLoop();
+        document.getElementById('btnModeCPU').addEventListener('click', () => openCharacterSelect(true));
+        document.getElementById('btnModePvP').addEventListener('click', () => openCharacterSelect(false));
+        document.getElementById('btnBackToMode').addEventListener('click', () => {
+            SoundFX.select();
+            gameState.status = 'menu';
+            document.getElementById('selectScreen').classList.add('hidden');
+            document.getElementById('startScreen').classList.remove('hidden');
+        });
+        document.getElementById('btnFightStart').addEventListener('click', () => startMatch());
+        document.getElementById('btnRestart').addEventListener('click', () => startMatch());
+        document.getElementById('btnToCharSelect').addEventListener('click', () => openCharacterSelect(gameState.vsCPU));
+        document.getElementById('btnMainMenu').addEventListener('click', () => {
+            SoundFX.select();
+            gameState.status = 'menu';
+            clearInterval(gameState.timerInterval);
+            document.getElementById('gameOverScreen').classList.add('hidden');
+            document.getElementById('startScreen').classList.remove('hidden');
+        });
+
+        document.getElementById('btnQuickStage').addEventListener('click', () => {
+            SoundFX.select();
+            const stageKeys = Object.keys(STAGES);
+            const nextIdx = (stageKeys.indexOf(gameState.stageId) + 1) % stageKeys.length;
+            gameState.stageId = stageKeys[nextIdx];
+            initAmbientEffects();
+            if (gameState.status === 'select') renderSelectionUI();
+        });
+
+        document.getElementById('btnMuteAudio').addEventListener('click', (e) => {
+            SoundFX.muted = !SoundFX.muted;
+            e.target.textContent = `Som: ${SoundFX.muted ? 'OFF' : 'ON'}`;
+        });
+
+        document.getElementById('toggleHitboxBtn').addEventListener('click', (e) => {
+            gameState.showHitboxes = !gameState.showHitboxes;
+            e.target.textContent = `Hitboxes: ${gameState.showHitboxes ? 'ON' : 'OFF'}`;
+        });
+
+        document.getElementById('btnMovesList').addEventListener('click', () => {
+            SoundFX.select();
+            document.getElementById('movesModal').classList.remove('hidden');
+        });
+
+        document.getElementById('btnCloseMoves').addEventListener('click', () => {
+            SoundFX.select();
+            document.getElementById('movesModal').classList.add('hidden');
+        });
+
+        window.onload = function () {
+            initAmbientEffects();
+            updateHudAvatars();
+            updateHUD();
+            gameLoop();
+        };
     </script>
 </body>
 </html>
